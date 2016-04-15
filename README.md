@@ -11,7 +11,9 @@
 
 ## Usage
 
-* copy mcs.c, mcs.h, smart_connection.c, smart_connection.h to your `/project/mt7687_hdk/{your project name}/`
+* copy mcs.c, smart_connection.c into `/project/mt7687_hdk/{your project name}/src/`
+
+* copy mcs.h, smart_connection.h into `/project/mt7687_hdk/{your project name}/inc/`
 
 * Following, we assume `/project/mt7687_hdk/{your project name}/` is the `{project_root}` path.
 
@@ -25,7 +27,7 @@
 ```
 * Edit `{project_root}/main.c`:
 
-``` Makefile
+``` c
   # add this line:
   #include "mcs.h"
   #include "smart_connection.h"
