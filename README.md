@@ -17,7 +17,7 @@
 
 * If you want to use the smart connection feature, edit the `{project_root}/GCC/feature.mk`:
 
-```
+``` Makefile
   # add this line:
   MTK_SMARTCONNECT_HDK = y
   # Please reference mcs.c/reference/feature.mk, line24
@@ -25,7 +25,7 @@
 ```
 * Edit `{project_root}/main.c`:
 
-```
+``` Makefile
   # add this line:
   #include "mcs.h"
   #include "smart_connection.h"
@@ -35,7 +35,7 @@
 
 * Edit `{project_root/GCC/Makefile}`:
 
-```
+``` Makefile
   # add this line:
 
   APP_FILES       += $(APP_PATH_SRC)/mcs.c
