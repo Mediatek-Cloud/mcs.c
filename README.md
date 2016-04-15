@@ -27,13 +27,28 @@
 
 ```
   # add this line:
-  # Please reference mcs.c/reference/main.c, line24
+  #include "mcs.h"
+  #include "smart_connection.h"
+
+  # Please reference mcs.c/reference/main.c, line18
 ```
 
-* Edit `{project_root/GCC/Makefile}:
+* Edit `{project_root/GCC/Makefile}`:
 
 ```
   # add this line:
 
-  # Please reference mcs.c/reference/Makefile, line24
-```   
+  APP_FILES       += $(APP_PATH_SRC)/mcs.c
+
+  ifeq ($(MTK_SMARTCONNECT_HDK),y)
+  APP_FILES       += $(APP_PATH_SRC)/smart_connection.c
+  endif
+
+  # Please reference mcs.c/reference/Makefile, line85
+
+  ifeq ($(MTK_SMARTCONNECT_HDK),y)
+    CFLAGS += -DMTK_SMARTCONNECT_HDK
+  endif
+
+  # Please reference mcs.c/reference/Makefile, line130
+```
