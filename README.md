@@ -41,7 +41,7 @@
   // Please reference mcs.c/reference/main.c, line18
 ```
 
-* Edit the file `{project_root/GCC/Makefile}`:
+* Edit the file `{project_root}/GCC/Makefile`:
 
 ``` Makefile
   # add this line:
