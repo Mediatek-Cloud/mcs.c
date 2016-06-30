@@ -61,6 +61,6 @@
   # Please reference mcs.c/reference/Makefile, line130
 ```
 
-## SDK version
+## Binding MTK RTOS SDK version
 
 * V3.1.0

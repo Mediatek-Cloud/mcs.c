@@ -75,8 +75,12 @@ void getInitialTCPIP () {
 
     /* set Url */
     char get_url[70] ={0};
+
     char host[5];
-    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_deviceId_len);
+    int nvdm_host_len = sizeof(host);
+    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_host_len);
+
+    // printf("======= host : %s ======== \n", host);
 
     if (strcmp(host, "com") == 0) {
         strcat(get_url, HTTPS_MTK_CLOUD_URL_COM);
@@ -154,7 +158,17 @@ void mcs_upload_datapoint(char *value)
 
     /* Set post_url */
     char post_url[70] ={0};
-    strcat(post_url, HTTPS_MTK_CLOUD_URL_COM);
+
+    char host[5];
+    int nvdm_host_len = sizeof(host);
+    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_deviceId_len);
+
+    if (strcmp(host, "com") == 0) {
+        strcat(post_url, HTTPS_MTK_CLOUD_URL_COM);
+    } else {
+        strcat(post_url, HTTPS_MTK_CLOUD_URL_CN);
+    }
+
     strcat(post_url, deviceId);
     strcat(post_url, "/datapoints.csv");
 
@@ -242,10 +256,6 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
     int nvdm_clientId_len = sizeof(clientId);
     nvdm_read_data_item("common", "clientId", (uint8_t *)clientId, (uint32_t *)&nvdm_clientId_len);
 
-    char server[50];
-    int nvdm_server_len = sizeof(server);
-    nvdm_read_data_item("common", "server", (uint8_t *)server, (uint32_t *)&nvdm_server_len);
-
     char port[5];
     int nvdm_port_len = sizeof(port);
     nvdm_read_data_item("common", "port", (uint8_t *)port, (uint32_t *)&nvdm_port_len);
@@ -256,7 +266,6 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
 
     printf("topic: %s\n", topic);
     printf("clientId: %s\n", clientId);
-    printf("server: %s\n", server);
     printf("port: %s\n", port);
     // printf("qos: %s\n", qos_method);
 
@@ -271,7 +280,15 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
     //init mqtt network structure
     NewNetwork(&n);
 
-    rc = ConnectNetwork(&n, server, port);
+    char host[5];
+    int nvdm_host_len = sizeof(host);
+    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_host_len);
+
+    if (strcmp(host, "com") == 0) {
+        rc = ConnectNetwork(&n, MQTT_HOST_COM, port);
+    } else {
+        rc = ConnectNetwork(&n, MQTT_HOST_CN, port);
+    }
 
     if (rc != 0) {
         printf("TCP connect fail,status -%4X\n", -rc);
