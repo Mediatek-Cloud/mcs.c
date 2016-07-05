@@ -8,6 +8,9 @@
 * `void mcs_tcp_init(void (*mcs_tcp_callback)(char *));`
   - Listen the TCP command from MCS.
 
+* `void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *));`
+  - Listen the MQTT from MCS.
+
 * `smart_config_if_enabled()`
   - Enable smart connection with MCS app.
 

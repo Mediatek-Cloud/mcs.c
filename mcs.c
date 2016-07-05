@@ -207,7 +207,7 @@ void mcs_upload_datapoint(char *value)
     }
     printf("\n************************\n");
     printf("httpclient_test_keepalive post data every 5 sec, http status:%d, response data: %s\r\n", httpclient_get_response_code(&client), client_data.response_buf);
-    printf("************************\n");
+    printf("\n************************\n");
     vPortFree(buf);
     httpclient_close(&client, HTTPS_PORT);
     return ret;
