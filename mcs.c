@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "net_init.h"
 #include "network_init.h"
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
@@ -26,8 +25,8 @@ TimerHandle_t heartbeat_timer;
 /* RESTful config */
 #define BUF_SIZE   (1024 * 1)
 /* Now only .com , must do for china */
-#define HTTPS_MTK_CLOUD_URL_COM "https://api.mediatek.com/mcs/v2/devices/"
-#define HTTPS_MTK_CLOUD_URL_CN "https://api.mediatek.cn/mcs/v2/devices/"
+#define HTTPS_MTK_CLOUD_URL_COM "http://api.mediatek.com/mcs/v2/devices/"
+#define HTTPS_MTK_CLOUD_URL_CN "http://api.mediatek.cn/mcs/v2/devices/"
 
 /* MQTT HOST */
 #define MQTT_HOST_COM "mqtt.mcs.mediatek.com"
@@ -105,8 +104,6 @@ HTTPCLIENT_RESULT getInitialTCPIP () {
     int nvdm_host_len = sizeof(host);
     nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_host_len);
 
-    // printf("======= host : %s ======== \n", host);
-
     if (strcmp(host, "com") == 0) {
         strcat(get_url, HTTPS_MTK_CLOUD_URL_COM);
     } else {
@@ -133,12 +130,7 @@ HTTPCLIENT_RESULT getInitialTCPIP () {
     client_data.response_buf_len = BUF_SIZE;
     httpclient_set_custom_header(&client, header);
 
-    ret = httpclient_send_request(&client, get_url, HTTPCLIENT_GET, &client_data);
-    if (ret < 0) {
-        return ret;
-    }
-
-    ret = httpclient_recv_response(&client, &client_data);
+    ret = httpclient_get(&client, get_url, HTTP_PORT, &client_data);
     if (ret < 0) {
         return ret;
     }
@@ -152,8 +144,7 @@ HTTPCLIENT_RESULT getInitialTCPIP () {
         char *arr[1];
         char *del = ",";
         mcs_split(arr, split_buf, del);
-        printf("tcpIp:%s\n", arr[0]);
-        *TCP_ip = arr[0];
+        strcpy(TCP_ip, arr[0]);
     }
     vPortFree(buf);
     httpclient_close(&client, HTTPS_PORT);
@@ -255,7 +246,7 @@ void mqttMessageArrived(MessageData *md) {
     if (0 == strncmp (arr[3], "FOTA", 4)) {
         char *s = mcs_replace(arr[6], "https", "http");
         printf("fota url: %s\n", s);
-        _fota_cli_dl_by_http(s);
+        fota_download_by_http(s);
     } else {
         if (strcmp(rcv_buf_old, rcv_buf) != 0) {
             rcv_buf[(size_t)(message->payloadlen)] = '\0';
@@ -391,16 +382,12 @@ int32_t mcs_tcp_init(void (*mcs_tcp_callback)(char *))
     strcat(cmd_buf, deviceKey);
     strcat(cmd_buf, ",0");
 
-    printf("cmd_buf: %s\n", cmd_buf);
-
 mcs_tcp_connect:
     os_memset(&addr, 0, sizeof(addr));
     addr.sin_len = sizeof(addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(SOCK_TCP_SRV_PORT);
-    addr.sin_addr.s_addr =inet_addr(*TCP_ip);
-
-    printf("============MCS TCP: %s connection ============\n", *TCP_ip);
+    addr.sin_addr.s_addr =inet_addr(TCP_ip);
 
     /* create the socket */
     s = lwip_socket(AF_INET, SOCK_STREAM, 0);
@@ -458,7 +445,7 @@ mcs_tcp_connect:
             strcat(data_buf, "status");
             strcat(data_buf, ",,fotaing");
             mcs_upload_datapoint(data_buf);
-            _fota_cli_dl_by_http(s);
+            fota_download_by_http(s);
         } else {
           mcs_tcp_callback(rcv_buf);
         }
