@@ -44,6 +44,31 @@ void mcs_split(char **arr, char *str, const char *del) {
   }
 }
 
+/**
+ * @brief Split MCS response into limited splits
+ * @details There two difference between mcs_split:
+ *          1. This function can avoid burst of MCS data
+ *          (for now, two MCS response data concatnates sometimes when sending requests in high frequency)
+ *          2. This function is reentrant version of mcs_split
+ *          (use strtok_r instead of strtok)
+ *
+ * @param dst output buffer
+ * @param src input buffer
+ * @param delimiter
+ * @param max_split max number of splits
+ */
+void mcs_splitn(char ** dst, char * src, const char * delimiter, uint32_t max_split)
+{
+    uint32_t split_cnt = 0;
+    char *saveptr = NULL;
+    char *s = strtok_r(src, delimiter, &saveptr);
+    while (s != NULL && split_cnt < max_split) {
+        *dst++ = s;
+        s = strtok_r(NULL, delimiter, &saveptr);
+        split_cnt++;
+    }
+}
+
 char *mcs_replace(char *st, char *orig, char *repl) {
   static char buffer[1024];
   char *ch;
@@ -56,7 +81,7 @@ char *mcs_replace(char *st, char *orig, char *repl) {
 }
 
 /* to get TCP IP */
-void getInitialTCPIP () {
+HTTPCLIENT_RESULT getInitialTCPIP () {
     int ret = HTTPCLIENT_ERROR_CONN;
     httpclient_t client = {0};
     char *buf = NULL;
@@ -333,7 +358,7 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
 }
 
 /* tcp connection */
-void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
+int32_t mcs_tcp_init(void (*mcs_tcp_callback)(char *))
 {
     int s;
     int c;
@@ -342,10 +367,12 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
     int count = 0;
     int rcv_len, rlen;
 
-    /* Setting the TCP ip */
-    getInitialTCPIP();
+    int32_t mcs_ret = MCS_TCP_DISCONNECT;
 
-    os_memset(&addr, 0, sizeof(addr));
+    /* Setting the TCP ip */
+    if (HTTPCLIENT_OK != getInitialTCPIP()) {
+        return MCS_TCP_INIT_ERROR;
+    }
 
     /* deviceId */
     char deviceId[20];
@@ -366,6 +393,8 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
 
     printf("cmd_buf: %s\n", cmd_buf);
 
+mcs_tcp_connect:
+    os_memset(&addr, 0, sizeof(addr));
     addr.sin_len = sizeof(addr);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(SOCK_TCP_SRV_PORT);
@@ -376,6 +405,7 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
     /* create the socket */
     s = lwip_socket(AF_INET, SOCK_STREAM, 0);
     if (s < 0) {
+        mcs_ret = MCS_TCP_SOCKET_INIT_ERROR;
         printf("tcp client create fail 0\n");
         goto idle;
     }
@@ -384,9 +414,8 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
 
     if (ret < 0) {
         lwip_close(s);
-        mcs_tcp_init(mcs_tcp_callback);
         printf("tcp client connect fail 1\n");
-        goto idle;
+        goto mcs_tcp_connect;
     }
 
     /* timer */
@@ -410,7 +439,7 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
         rcv_len += rlen;
 
         if ( 0 == rcv_len ) {
-            return;
+            return MCS_TCP_DISCONNECT;
         }
 
         LOG_I(common, "MCS tcp-client received data:%s", rcv_buf);
@@ -421,7 +450,7 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
 
         char *arr[7];
         char *del = ",";
-        mcs_split(arr, split_buf, del);
+        mcs_splitn(arr, split_buf, del, 7);
         if (0 == strncmp (arr[3], "FOTA", 4)) {
             char *s = mcs_replace(arr[6], "https", "http");
             printf("fota url: %s\n", s);
@@ -439,5 +468,5 @@ void mcs_tcp_init(void (*mcs_tcp_callback)(char *))
 
 idle:
     LOG_I(common, "MCS tcp-client end");
-
+    return MCS_TCP_DISCONNECT;
 }
