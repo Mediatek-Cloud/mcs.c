@@ -177,7 +177,7 @@ void mcs_upload_datapoint(char *value)
 
     char host[5];
     int nvdm_host_len = sizeof(host);
-    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_deviceId_len);
+    nvdm_read_data_item("common", "host", (uint8_t *)host, (uint32_t *)&nvdm_host_len);
 
     if (strcmp(host, "com") == 0) {
         strcat(post_url, HTTPS_MTK_CLOUD_URL_COM);
@@ -204,7 +204,7 @@ void mcs_upload_datapoint(char *value)
         return ret;
     }
     buf[0] = '\0';
-    ret = httpclient_connect(&client, post_url, HTTPS_PORT);
+    ret = httpclient_connect(&client, post_url, HTTP_PORT);
 
     client_data.response_buf = buf;
     client_data.response_buf_len = BUF_SIZE;
@@ -225,7 +225,7 @@ void mcs_upload_datapoint(char *value)
     printf("httpclient_test_keepalive post data every 5 sec, http status:%d, response data: %s\r\n", httpclient_get_response_code(&client), client_data.response_buf);
     printf("\n************************\n");
     vPortFree(buf);
-    httpclient_close(&client, HTTPS_PORT);
+    httpclient_close(&client, HTTP_PORT);
     return ret;
 }
 
