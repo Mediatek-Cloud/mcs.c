@@ -2097,9 +2097,6 @@
   <group>
     <name>apps</name>
     <file>
-      <name>$PROJ_DIR$\..\src\app_common.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\ept\src\bsp_gpio_ept_config.c</name>
     </file>
     <file>
@@ -2115,31 +2112,34 @@
       <name>$PROJ_DIR$\..\src\ept_gpio_var.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\src\lwip_network.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\src\main.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\src\network_init.c</name>
+      <name>$PROJ_DIR$\..\src\sys_init.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\src\sys_init.c</name>
+      <name>$PROJ_DIR$\..\src\wifi_lwip_helper.c</name>
     </file>
   </group>
   <group>
     <name>bsp</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\init\src\board_cli.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\util\src\board_cli.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\get_profile_string.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\init\src\io_def.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\util\src\gpio_cli.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\lib\libbsp_CM4_IAR.a</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\util\src\io_def.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\lib\libwifi_CM4_IAR.a</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\wifi_os_api.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\misc.c</name>
@@ -2185,6 +2185,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\common\bsp_ex\src\wifi_ex_profile.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\wifi_private_cli.c</name>
     </file>
   </group>
   <group>

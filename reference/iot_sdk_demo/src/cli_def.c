@@ -62,6 +62,7 @@
 
 #include "cli.h"
 #include "cli_def.h"
+#include "task_def.h"
 
 #include <toi.h>
 #include <type_def.h>
@@ -147,16 +148,17 @@ void cli_def_task(void *param)
 
 int cli_task_create(void)
 {
-    BaseType_t ret_val = xTaskCreate(cli_def_task,
-                                     CLI_TASK_NAME,
-                                     CLI_TASK_STACKSIZE,
-                                     NULL,
-                                     CLI_TASK_PRIO,
-                                     NULL);
-    if (pdPASS != ret_val) {
+    if (xTaskCreate(cli_def_task,
+                    MINICLI_TASK_NAME,
+                    MINICLI_TASK_STACKSIZE / sizeof(portSTACK_TYPE),
+                    NULL,
+                    MINICLI_TASK_PRIO,
+                    NULL) != pdPASS)
+    {
         LOG_E(common, "xTaskCreate fail");
         return -1;
     }
+
     return 0;
 }
 

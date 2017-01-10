@@ -4,181 +4,160 @@
  *
  * This software/firmware and related documentation ("MediaTek Software") are
  * protected under relevant copyright laws. The information contained herein
- * is confidential and proprietary to MediaTek Inc. ("MediaTek") and/or its licensors.
- * Without the prior written permission of MediaTek and/or its licensors,
- * any reproduction, modification, use or disclosure of MediaTek Software,
- * and information contained herein, in whole or in part, shall be strictly prohibited.
- * You may only use, reproduce, modify, or distribute (as applicable) MediaTek Software
- * if you have agreed to and been bound by the applicable license agreement with
- * MediaTek ("License Agreement") and been granted explicit permission to do so within
- * the License Agreement ("Permitted User").  If you are not a Permitted User,
- * please cease any access or use of MediaTek Software immediately.
- * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
- * THAT MEDIATEK SOFTWARE RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES
- * ARE PROVIDED TO RECEIVER ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT.
- * NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH RESPECT TO THE
- * SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY, INCORPORATED IN, OR
- * SUPPLIED WITH MEDIATEK SOFTWARE, AND RECEIVER AGREES TO LOOK ONLY TO SUCH
- * THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES
- * THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES
- * CONTAINED IN MEDIATEK SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK
- * SOFTWARE RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
- * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S ENTIRE AND
- * CUMULATIVE LIABILITY WITH RESPECT TO MEDIATEK SOFTWARE RELEASED HEREUNDER WILL BE,
- * AT MEDIATEK'S OPTION, TO REVISE OR REPLACE MEDIATEK SOFTWARE AT ISSUE,
- * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
- * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ * is confidential and proprietary to MediaTek Inc. ("MediaTek") and/or its
+ * licensors. Without the prior written permission of MediaTek and/or its
+ * licensors, any reproduction, modification, use or disclosure of MediaTek
+ * Software, and information contained herein, in whole or in part, shall be
+ * strictly prohibited. You may only use, reproduce, modify, or distribute
+ * (as applicable) MediaTek Software if you have agreed to and been bound by
+ * the applicable license agreement with MediaTek ("License Agreement") and
+ * been granted explicit permission to do so within the License Agreement
+ * ("Permitted User").  If you are not a Permitted User, please cease any
+ * access or use of MediaTek Software immediately.
  */
 
 /**
-  * @page MT7687 IoT SDK Example Project
-  * @{
+ * @addtogroup mt7687_hdk mt7687_hdk
+ * @{
+ * @addtogroup mt7687_hdk_apps apps
+ * @{
+ * @addtogroup mt7687_hdk_apps_iot_sdk_demo iot_sdk_demo
+ * @{
 
 @par Overview
+  - Appliation description
+    - This appliation demonstrates the Wi-Fi connectivity features of the
+      LinkIt 7687 HDK through the following:
+      - How to use the Wi-Fi API to initialize the Wi-Fi for different
+        operation mode.
+  - Application features
+    - Act as a Wi-Fi station to connect to a Wi-Fi network.
+    - Act as a Wi-Fi AP to accept connection to the LinkIt 7687 HDK from a
+      handheld device or a laptop computer.
+    - Ping out or into the device.
+    - Wi-Fi Command Line Interface (CLI). For more details about Wi-Fi
+      related CLI commands, please refer to the "Supported commands" section
+      of the "cli_readme.txt" document.
 
-- Example project description
-  - This project demonstrates the connectivity features of the MT7687.
-- Application features
-  - Act as a Wi-Fi station to connect to a Wi-Fi network.
-  - Act as a Wi-Fi AP to accept connection to the LinkIt 7687 HDK from a
-    handheld device or a laptop computer.
-  - Ping out/in the device.
-  - Wi-Fi Command Line Interface (CLI), please refer to "cli_readme.txt" for more details.
-  
 @par Hardware and software environment
-
   - Supported platform
     - LinkIt 7687 HDK.
-
-  - HDK switches and pin configuration
-    - J36 provides the pins of GPIOs, PWMs, SPI master chip select 0, SPI
-      master, UART1 RX/TX.
-    - J35 provides the pins of GPIOs, PWMs, UART2 RX/TX, UART1 RTS/CTS, SPI
-      master chip select 1, IR TX, and IR RX.
-    - J34 provides the pins of GPIOs, PWMs, UART2 RTS/CTS, I2S, SPI slave and
-      I2C0.
-    - J33 provides the pins of GPIOs, PWMs, I2C0, ADC0~3.
-    - J32 provides the pins of GND, 5V, 3.3V and reset pin.
-    - J25 controls the pins of the Flash Normal Mode vs Flash Recovery mode of HDK. 
-      Place a jumper over it,during the next boot-up, the HDK will boot under 
-      Flash Recovery Mode(update firmware), otherwise, it is booted into Flash 
-      Normal Mode (Run Application).
-    - There are three buttons on the board:
-      - RST - reset.
-      - EINT - external interrupt trigger.
-      - RTC_INT - RTC interrupt trigger.
-
-  - PC/environment configuration
-   - A serial tool is required, such as hyper terminal or TeraTerm for UART
-     logging.
-   - COM port settings. baudrate: 115200, data bits: 8, stop bit: 1, parity:
-     none and flow control: off.
+  - Environment configuration
+    - The output logs are communicated through a micro-USB cable to the PC
+      from USB (CON5) connector on the HDK.
+      - Install the mbed serial driver according to the instructions at
+        https://developer.mbed.org/handbook/Windows-serial-configuration. For
+        more information, please refer to section "Installing the LinkIt 7687
+        HDK drivers on Microsoft Windows" on the "LinkIt 7687 HDK User Guide"
+        in [sdk_root]/doc folder.
+      - Use a type-A to micro-B USB cable to connect type-A USB of the PC and
+        MK20 micro-B USB connector on the LinkIt 7687 HDK. For more
+        information about the connector cable, please refer to
+        https://en.wikipedia.org/wiki/USB#Mini_and_micro_connectors.
+      - Launch a terminal emulator program, such as Tera terminal on your PC
+        for data logging through UART. For the installation details, please
+        refer to section "Installing Tera terminal on Microsoft Windows" on
+        the "LinkIt for RTOS Get Started Guide" in [sdk_root]/doc folder.
+      - COM port settings. baudrate: 115200, data bits: 8, stop bit: 1,
+        parity: none and flow control: off.
 
 @par Directory contents
   - Source and header files
-   - iot_sdk_demo/src/main.c                 Entry point of the application program.
-   - iot_sdk_demo/src/sys_init.c             Aggregated initialization routines.
-   - iot_sdk_demo/src/system_mt7687.c        MT7687 system clock configuration file.
-   - iot_sdk_demo/src/app_common.c           Project user entry.
-   - iot_sdk_demo/src/cli_cmds.c             CLI table.
-   - iot_sdk_demo/src/lwip_network.c         lwIP configuration.
-   - iot_sdk_demo/src/cli_def.c              CLI definition.
-
-   - iot_sdk_demo/inc/flash_map.h            MT7687 memory layout symbol file.
-   - iot_sdk_demo/inc/hal_feature_config.h   MT7687 HAL API feature configuration
-                                             file.
-   - iot_sdk_demo/inc/FreeRTOSConfig.h       MT7687 FreeRTOS configuration file.
-   - iot_sdk_demo/inc/lwipopts.h             lwIP configuration.
-   - iot_sdk_demo/inc/sys_init.h             Prototype declaration for iot_sdk_demo/src/sys_init.c.
-   - iot_sdk_demo/inc/app_cli_table.h        CLI table entry.
-   - iot_sdk_demo/inc/cli_cmds.h             Prototype declaration for iot_sdk_demo/src/cli_cmds.c.
-   - iot_sdk_demo/inc/lwip_network.h         Prototype declaration for iot_sdk_demo/src/lwip_network.c.
-   - iot_sdk_demo/inc/app_common.h           Prototype declaration for iot_sdk_demo/src/app_common.c.
-
-  - Project configuration files using GCC.
-   - iot_sdk_demo/GCC/Makefile               GNU Makefile for this project.
-   - iot_sdk_demo/GCC/feature.mk             Generic feature options configuration
-                                             file.
-   - iot_sdk_demo/GCC/mt7687_flash.ld        Linker script.
-   - iot_sdk_demo/GCC/startup_mt7687.s       MT7687 startup file.
-   - iot_sdk_demo/GCC/syscalls.c             MT7687 syscalls implementation.
-
-  - Project configuration files using Keil.
-   - iot_sdk_demo/MDK-ARM/RTE/Device/7687_32M_MXIC.FLM
-   - iot_sdk_demo/MDK-ARM/RTE/Device/flash.ini
-   - iot_sdk_demo/MDK-ARM/RTE/RTE_Components.h
-   - iot_sdk_demo/MDK-ARM/flash.sct               Scatter file.
-   - iot_sdk_demo/MDK-ARM/iot_sdk_demo.uvoptx     uVision5 project options. Contains the
-                                                  settings for the debugger, trace
-                                                  configuration, breakpoints, currently
-                                                  open files, etc.
-   - iot_sdk_demo/MDK-ARM/iot_sdk_demo.uvprojx    uVision5 Project File. Contains the
-                                                  project structure in XML format.
-   - iot_sdk_demo/MDK-ARM/startup_mt7687.s        MT7687 startup file.
+    - \b src/main.c:            Main program.
+    - \b src/sys_init.c:        Aggregated initialization routines.
+    - \b src/system_mt7687.c:   MT76x7 clock configuration file.
+    - \b src/cli_cmds.c:        CLI table.
+    - \b src/wifi_lwip_helper.c:lwIP configuration.
+    - \b src/cli_def.c:         CLI definition.
+    - \b inc/flash_map.h:       MT76x7 memory layout symbol file.
+    - \b inc/task_def.h:        Define the task stack size, queue length,
+                                project name, and priority for the application
+                                to create tasks.
+    - \b inc/hal_feature_config.h:
+                                MT76x7 feature configuration file.
+    - \b inc/FreeRTOSConfig.h:  MT76x7 FreeRTOS configuration file.
+    - \b inc/lwipopts.h:        lwIP configuration.
+    - \b inc/sys_init.h:        Prototype declaration for
+                                iot_sdk_demo/src/sys_init.c.
+    - \b inc/app_cli_table.h:   CLI table entry.
+    - \b inc/cli_cmds.h:        Prototype declaration for
+                                iot_sdk_demo/src/cli_cmds.c.
+    - \b inc/wifi_lwip_helper.h:Prototype declaration for
+                                iot_sdk_demo/src/wifi_lwip_helper.c.
+    - \b GCC/syscalls.c:        MT76x7 syscalls for GCC.
+    - \b GCC/startup_mt7687.s:  MT76x7 startup file for GCC.
+    - \b MDK-ARM/startup_mt7687.s:
+                                MT76x7 startup file for Keil IDE.
+  - Project configuration files using GCC
+    - \b GCC/feature.mk:       Feature configuration.
+    - \b GCC/Makefile:         Makefile.
+    - \b GCC/mt7687_flash.ld:  Linker script.
+  - Project configuration files using Keil
+    - \b MDK-ARM/iot_sdk_demo.uvprojx:
+                             uVision5 Project File. Contains the project
+                             structure in XML format.
+    - \b MDK-ARM/flash.sct:  Linker script.
+  - Project configuration files using IAR
+    - \b EWARM/iot_sdk_demo.ewd:  IAR project options. Contains the settings
+                                  for the debugger.
+    - \b EWARM/iot_sdk_demo.ewp:  IAR project file. Contains the project
+                                  structure in XML format.
+    - \b EWARM/iot_sdk_demo.eww:  IAR workspace file. Contains project
+                                  information.
+    - \b EWARM/flash.icf:         Linker script.
 
 @par Run the examples
   - Below are two examples to demonstrate the Wi-Fi station and Wi-Fi access
-    point modes of MT7687.
+    point modes of the LinkIt 7687 HDK.
   - Example 1. Wi-Fi station mode.
-    - Find your Wi-Fi access point settings:
-      Before connecting to a Wi-Fi access point, the following information
-      needs to be collected:
-      1. What is the SSID of your Wi-Fi access point?
-      2. What is the password of your Wi-Fi access point?
-    - Once you have this information, use the following settings to initialize
-      the HDK. This example code in main.c assumes the access point SSID is
-      'myhome' (length 6) and the password is '12345678'
-      (length 8).
-
-        // User-defined settings.
+    - Find your Wi-Fi access point settings: Before connecting to a Wi-Fi
+      access point, the following information needs to be collected:
+      - The SSID of your Wi-Fi access point.
+      - The password of your Wi-Fi access point.
+    - Apply the following settings in the main.c source file to initialize
+      the HDK. In this example the access point SSID is 'myhome' (length 6)
+      and the password is '12345678' (length 8).
+      - User-defined settings.
+        \code
         wifi_config_t config = {0};
         config.opmode = WIFI_MODE_STA_ONLY;
         strcpy((char *)config.sta_config.ssid, "myhome");
         config.sta_config.ssid_length = strlen("myhome");
         strcpy((char *)config.sta_config.password, "12345678");
         config.sta_config.password_length = strlen("12345678");
-
-        // Wi-Fi initialization.
+        \endcode
+      - Wi-Fi initialization.
+        \code
         wifi_init(&config, NULL);
-
-  - Connect the board to PC with a serial port cable.
-  - Build the example project and download the binary file to the HDK.
+        \endcode
+  - Build the example project with the command "./build.sh mt7687_hdk
+    iot_sdk_demo" from the SDK root folder and download the binary file to
+    the LinkIt 7687 HDK.
+  - Connect your board to the PC with a micro-USB cable.
   - Reboot the HDK, the console will show "FreeRTOS Running" message to
-    indicate the HDK is booting up.
-
-      If everything is correct, similar messages will be shown in the console
-      to notify your HDK has received an IP address.
-
-        ************************
-        DHCP got IP:10.10.10.101
-        ************************
-
-    - PING from the LinkIt 7687 HDK.
-      If the IP address is fetched and the network is operating, the LinkIt
-      7687 HDK can ping other devices/computer on the network with the following
-      command in the console.
-
-        ping 10.10.10.254 3 64
-
-      The ping stops after sending three packets to 10.10.10.254.
-      The ping usage is: ping <ip address> <ping count> <ping packet length>
-
+    indicate the HDK is booting up. If everything is correct, similar
+    messages "DHCP got IP:10.10.10.101" will be shown in the console to
+    notify your HDK has received an IP address.
+    - PING from the LinkIt 7687 HDK. If the IP address is fetched and the
+      network is operating, the LinkIt 7687 HDK can ping other
+      devices/computer on the network with the following command in the
+      console. ping 10.10.10.254 3 64 The ping stops after sending three
+      packets to 10.10.10.254. The ping usage is: ping <ip_address>
+      <ping_count> <ping_packet_length>.
   - Example 2. Wi-Fi access point mode.
-    - Apply Wi-Fi access point settings before proceeding":
+    - Apply the Wi-Fi access point settings before proceeding:
       - SSID
       - Authentication Mode
       - Encryption Type
       - Password
       - Channel
-
-    - Once the information is collected, use the following statements to
-      configure the LinkIt 7687 HDK. The example code in main.c assumes WPA2 PSK is used for
-      authentication, AES for encryption, 'iot_ap' (length 6) for the SSID,
-      the password of WPA2 as '87654321' (length 8) and the channel 6 is assigned to the channel.
-
-        // User-defined settings.
+    - Once the information is collected, use the following commands to
+      configure the LinkIt 7687 HDK. The example code in main.c assumes WPA2
+      PSK is used for authentication, AES for encryption, 'iot_ap' (length 6)
+      for the SSID, the password of WPA2 as '87654321' (length 8) and the
+      channel 6 is assigned to the channel.
+      - User-defined settings.
+        \code
         wifi_config_t config = {0};
         wifi_config.opmode = WIFI_MODE_AP_ONLY;
         strcpy((char *)wifi_config.ap_config.ssid, "iot_ap");
@@ -188,19 +167,23 @@
         strcpy((char *)wifi_config.ap_config.password, "87654321");
         wifi_config.ap_config.password_length = strlen("87654321");
         wifi_config.ap_config.channel = 6;
-
-        // Wi-Fi initialization.
+        \endcode
+      - Wi-Fi initialization.
+        \code
         wifi_init(&config, NULL);
-
-  - Connect the board to PC with a serial port cable.
-  - Build the example project and download the binary file to the HDK.
+        \endcode
+  - Build the example project with the command "./build.sh mt7687_hdk
+    iot_sdk_demo" from the SDK root folder and download the binary file to
+    the LinkIt 7687 HDK.
+  - Connect your board to the PC with a micro-USB cable.
   - Reboot the HDK, the console will show "FreeRTOS Running" message to
     indicate the HDK is booting up.
-    - Use a handheld device or a laptop computer to connect to the access point
-      'iot_ap'. On the HDK console, the IP address assigned to the handheld device
-      or laptop is shown below.
-
-        [DHCPD:DBG]lease_ip:10.10.10.2
-
-* @}
+    - Use a handheld device or a laptop computer to connect to the access
+      point 'iot_ap'. On the HDK console, the IP address assigned to the
+      handheld device or laptop is: [DHCPD:DBG]lease_ip:10.10.10.2
 */
+/**
+ * @}
+ * @}
+ * @}
+ */

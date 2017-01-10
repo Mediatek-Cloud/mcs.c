@@ -48,7 +48,7 @@
 #include "ethernetif.h"
 #include "portmacro.h"
 #include "dhcpd.h"
-#include "wifi_api.h"
+#include "wifi_private_api.h"
 
 #define USE_DHCP                 1
 
@@ -66,9 +66,9 @@
 #define IP_POOL_START ("10.10.10.2")
 #define IP_POOL_END   ("10.10.10.10")
 
-SemaphoreHandle_t wifi_connected;
+static SemaphoreHandle_t wifi_connected;
 #if USE_DHCP
-SemaphoreHandle_t ip_ready;
+static SemaphoreHandle_t ip_ready;
 #endif
 
 #if USE_DHCP
@@ -85,8 +85,6 @@ static int32_t wifi_station_disconnected_event_handler(wifi_event_t event, uint8
 #if USE_DHCP
 static void ip_ready_callback(struct netif *netif)
 {
-    uint8_t op_mode = 0;
-
     if (!ip4_addr_isany_val(netif->ip_addr)) {
         char ip_addr[17] = {0};
         if (NULL != inet_ntoa(netif->ip_addr)) {
@@ -98,15 +96,21 @@ static void ip_ready_callback(struct netif *netif)
             LOG_E(common, "DHCP got Failed");
         }
     #ifdef MTK_WIFI_REPEATER_ENABLE
+        uint8_t op_mode = 0;
         struct netif *ap_if = netif_find_by_type(NETIF_TYPE_AP);
         wifi_config_get_opmode(&op_mode);
         if (WIFI_MODE_REPEATER == op_mode) {
             netif_set_addr(ap_if, &netif->ip_addr, &netif->netmask, &netif->gw);
         }
     #endif
+      
+       /*This is a private API , which used to inform IP is ready to wifi driver
+        *In present, WiFi Driver will do some operation when this API is invoked, such as:
+        *Do WiFi&BLE Coexstence relative behavior if BLE is enabled and do Power Saving Status change.
+        *This API will be improved, user may need to use new API to replace it in future*/
+        wifi_connection_inform_ip_ready();
     }
     xSemaphoreGive(ip_ready);
-    LOG_I(common, "ip ready");
 }
 #endif
 
@@ -125,6 +129,13 @@ static int32_t wifi_station_port_secure_event_handler(wifi_event_t event,
 
     sta_if = netif_find_by_type(NETIF_TYPE_STA);
     netif_set_link_up(sta_if);
+#ifndef USE_DHCP
+   /*This is a private API , which used to inform IP is ready to wifi driver
+    *In present, WiFi Driver will do some operation when this API is invoked, such as:
+    *Do WiFi&BLE Coexstence relative behavior if BLE is enabled and do Power Saving Status change.
+    *This API will be improved, user may need to use new API to replace it in future*/
+    wifi_connection_inform_ip_ready();
+#endif
     xSemaphoreGive(wifi_connected);
     LOG_I(common, "wifi connected");
     return 0;
@@ -141,14 +152,23 @@ static int32_t wifi_station_disconnected_event_handler(wifi_event_t event,
         uint8_t *payload,
         uint32_t length)
 {
-    struct netif *sta_if;
+    uint8_t opmode  = 0;
 
-    sta_if = netif_find_by_type(NETIF_TYPE_STA);
-    netif_set_link_down(sta_if);
-#if USE_DHCP
-    netif_set_addr(sta_if, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY);
-#endif
-    LOG_I(common, "wifi disconnected");
+    wifi_config_get_opmode(&opmode);
+    if ((WIFI_MODE_AP_ONLY != opmode) && WIFI_EVENT_IOT_DISCONNECTED == event) {
+        uint8_t link_status = 1;
+        //should check link status, it will emit this event when sp disconnect with host under repeater mode.
+        wifi_connection_get_link_status(&link_status);
+        if (link_status == 0) {
+            struct netif *sta_if;
+            sta_if = netif_find_by_type(NETIF_TYPE_STA);
+            netif_set_link_down(sta_if);
+        #if USE_DHCP
+            netif_set_addr(sta_if, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY);
+        #endif
+            LOG_I(common, "wifi disconnected");
+        }
+    }
     return 1;
 }
 
@@ -175,7 +195,11 @@ void lwip_network_init(uint8_t opmode)
     lwip_tcpip_init(&tcpip_config, opmode);
 }
 
-
+/**
+  * @brief  Start lwip service in a certain operation mode.
+  * @param[in] uint8_t opmode: the target operation mode.
+  * @retval None
+  */
 void lwip_net_start(uint8_t opmode)
 {
     struct netif *sta_if;
@@ -211,6 +235,11 @@ void lwip_net_start(uint8_t opmode)
     }
 }
 
+/**
+  * @brief  Stop lwip service in a certain operation mode.
+  * @param[in] uint8_t opmode: the current operation mode.
+  * @retval None
+  */
 void lwip_net_stop(uint8_t opmode)
 {
     struct netif *sta_if;
@@ -244,5 +273,29 @@ void lwip_net_ready()
 #if USE_DHCP
     xSemaphoreTake(ip_ready, portMAX_DELAY);
 #endif
+}
+
+/**
+  * @brief  Change operation mode dynamically.
+  * @param[in] uint8_t target_mode: the target switched operation mode.
+  * @retval None
+  */
+uint8_t wifi_set_opmode(uint8_t target_mode)
+{
+    uint8_t origin_op_mode = 0;
+    wifi_config_get_opmode(&origin_op_mode);
+    if(target_mode == origin_op_mode) {
+        LOG_I(wifi, "same opmode %d, do nothing", target_mode);
+        return 0;
+    }
+    lwip_net_stop(origin_op_mode);
+
+    if(wifi_config_set_opmode(target_mode) < 0) {
+        return 1;
+    }
+    LOG_I(wifi, "set opmode to [%d]", target_mode);
+
+    lwip_net_start(target_mode);
+    return 0;
 }
 

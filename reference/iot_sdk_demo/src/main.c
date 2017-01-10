@@ -38,22 +38,18 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "sys_init.h"
-#include "lwip_network.h"
+#include "wifi_lwip_helper.h"
 #include "wifi_api.h"
 #if defined(MTK_MINICLI_ENABLE)
 #include "cli_def.h"
 #endif
 #include "bsp_gpio_ept_config.h"
-#include "app_common.h"
-#include "nvdm.h"
-#include "wifi_api.h"
-#include "lwip/ip4_addr.h"
-#include "lwip/inet.h"
-#include "lwip/netif.h"
-#include "lwip/tcpip.h"
-#include "lwip/dhcp.h"
-#include "ethernetif.h"
+#include "task_def.h"
+#include "syslog.h"
+#include "os.h"
+#include <nvdm.h>
 #include "mcs.h"
+
 /* pwm module */
 #include "hal_pwm.h"
 
@@ -66,13 +62,59 @@
 #define pin 31
 #define PWM_CHANNEL "PWM"
 
-#define deviceId "DU8xrUWV"
-#define deviceKey "nE1EFLIlm3TrZg79"
-#define Ssid "mcs"
-#define Password "mcs12345678"
-#define host "com"
+#define APP_TASK_NAME                   "user entry"
+#define APP_TASK_STACKSIZE              (6*1024)
+#define APP_TASK_PRIO                   TASK_PRIORITY_NORMAL
 
-static SemaphoreHandle_t ip_ready;
+#ifndef MTK_DEBUG_LEVEL_NONE
+log_create_module(main, PRINT_LEVEL_ERROR);
+
+LOG_CONTROL_BLOCK_DECLARE(main);
+LOG_CONTROL_BLOCK_DECLARE(common);
+LOG_CONTROL_BLOCK_DECLARE(hal);
+LOG_CONTROL_BLOCK_DECLARE(lwip);
+LOG_CONTROL_BLOCK_DECLARE(minisupp);
+LOG_CONTROL_BLOCK_DECLARE(inband);
+LOG_CONTROL_BLOCK_DECLARE(wifi);
+
+log_control_block_t *syslog_control_blocks[] = {
+    &LOG_CONTROL_BLOCK_SYMBOL(main),
+    &LOG_CONTROL_BLOCK_SYMBOL(common),
+    &LOG_CONTROL_BLOCK_SYMBOL(hal),
+    &LOG_CONTROL_BLOCK_SYMBOL(lwip),
+    &LOG_CONTROL_BLOCK_SYMBOL(minisupp),
+    &LOG_CONTROL_BLOCK_SYMBOL(inband),
+    &LOG_CONTROL_BLOCK_SYMBOL(wifi),
+    NULL
+};
+
+static void syslog_config_save(const syslog_config_t *config)
+{
+    char *syslog_filter_buf;
+
+    syslog_filter_buf = (char*)pvPortMalloc(SYSLOG_FILTER_LEN);
+    configASSERT(syslog_filter_buf != NULL);
+    syslog_convert_filter_val2str((const log_control_block_t **)config->filters, syslog_filter_buf);
+    nvdm_write_data_item("common", "syslog_filters", \
+                         NVDM_DATA_ITEM_TYPE_STRING, (const uint8_t *)syslog_filter_buf, strlen(syslog_filter_buf));
+    vPortFree(syslog_filter_buf);
+}
+
+static uint32_t syslog_config_load(syslog_config_t *config)
+{
+    uint32_t sz = SYSLOG_FILTER_LEN;
+    char *syslog_filter_buf;
+
+    syslog_filter_buf = (char*)pvPortMalloc(SYSLOG_FILTER_LEN);
+    configASSERT(syslog_filter_buf != NULL);
+    nvdm_read_data_item("common", "syslog_filters", (uint8_t *)syslog_filter_buf, &sz);
+    syslog_convert_filter_str2val(config->filters, syslog_filter_buf);
+    vPortFree(syslog_filter_buf);
+
+    return 0;
+}
+#endif
+
 
 void start_pwm() {
     /* pwm */
@@ -95,39 +137,6 @@ void start_pwm() {
 
 }
 
-/**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
-
-wifi_config_t wifi_config = {0};
-lwip_tcpip_config_t tcpip_config = {{0}, {0}, {0}, {0}, {0}, {0}};
-
-static int32_t _wifi_event_handler(wifi_event_t event,
-        uint8_t *payload,
-        uint32_t length)
-{
-    struct netif *sta_if;
-    LOG_I(common, "wifi event: %d", event);
-
-    switch(event)
-    {
-    case WIFI_EVENT_IOT_PORT_SECURE:
-        sta_if = netif_find_by_type(NETIF_TYPE_STA);
-        netif_set_link_up(sta_if);
-        LOG_I(common, "wifi connected");
-        break;
-    case WIFI_EVENT_IOT_DISCONNECTED:
-        sta_if = netif_find_by_type(NETIF_TYPE_STA);
-        netif_set_link_down(sta_if);
-        LOG_I(common, "wifi disconnected");
-        break;
-    }
-
-    return 1;
-}
-
 void tcp_callback(char *rcv_buf) {
 
     char *arr[5];
@@ -142,82 +151,72 @@ void tcp_callback(char *rcv_buf) {
     printf("rcv_buf: %s\n", rcv_buf);
 }
 
-static void _ip_ready_callback(struct netif *netif)
+static void app_entry(void *args)
 {
-    if (!ip4_addr_isany_val(netif->ip_addr)) {
-        char ip_addr[17] = {0};
-        if (NULL != inet_ntoa(netif->ip_addr)) {
-            strcpy(ip_addr, inet_ntoa(netif->ip_addr));
-            LOG_I(common, "************************");
-            LOG_I(common, "DHCP got IP:%s", ip_addr);
-            LOG_I(common, "************************");
-        } else {
-            LOG_E(common, "DHCP got Failed");
-        }
+    lwip_net_ready();
+    mcs_tcp_init(tcp_callback);
+
+    while (1) {
+        vTaskDelay(1000 / portTICK_RATE_MS); // release CPU
     }
-    xSemaphoreGive(ip_ready);
-    LOG_I(common, "ip ready");
-}
-
-void wifi_initial_task() {
-  struct netif *sta_if;
-  wifi_init(&wifi_config, NULL);
-  lwip_tcpip_init(&tcpip_config, WIFI_MODE_STA_ONLY);
-
-  ip_ready = xSemaphoreCreateBinary();
-
-  sta_if = netif_find_by_type(NETIF_TYPE_STA);
-  netif_set_status_callback(sta_if, _ip_ready_callback);
-  dhcp_start(sta_if);
-
-  xSemaphoreTake(ip_ready, portMAX_DELAY);
-  mcs_tcp_init(tcp_callback);
-  vTaskDelete(NULL);
 }
 
 
+/**
+  * @brief  Main program
+  * @param  None
+  * @retval None
+  */
 int main(void)
 {
     /* Do system initialization, eg: hardware, nvdm, logging and random seed. */
     system_init();
 
-    /* bsp_ept_gpio_setting_init() under driver/board/mt76x7_hdk/ept will initialize the GPIO settings
-     * generated by easy pinmux tool (ept). ept_*.c and ept*.h are the ept files and will be used by
-     * bsp_ept_gpio_setting_init() for GPIO pinumux setup.
+#ifndef MTK_DEBUG_LEVEL_NONE
+    log_init(syslog_config_save, syslog_config_load, syslog_control_blocks);
+#endif
+
+    LOG_I(common, "FreeRTOS Running");
+
+  /* User initial the parameters for wifi initial process,  system will determin which wifi operation mode
+     * will be started , and adopt which settings for the specific mode while wifi initial process is running
      */
-    bsp_ept_gpio_setting_init();
+    wifi_config_t config = {0};
+    config.opmode = WIFI_MODE_STA_ONLY;
+    strcpy((char *)config.sta_config.ssid, (const char *)"mcs");
+    strcpy((char *)config.sta_config.password, (const char *)"mcs12345678");
+    config.sta_config.ssid_length = strlen((const char *)config.sta_config.ssid);
+    config.sta_config.password_length = strlen((const char *)config.sta_config.password);
 
-    int nvdm_deviceKey_len = sizeof(deviceKey);
-    int nvdm_deviceId_len = sizeof(deviceId);
-    int nvdm_host_len = sizeof(host);
 
-    nvdm_write_data_item("common", "deviceId", NVDM_DATA_ITEM_TYPE_STRING, (uint8_t *)deviceId, nvdm_deviceId_len);
-    nvdm_write_data_item("common", "deviceKey", NVDM_DATA_ITEM_TYPE_STRING, (uint8_t *)deviceKey, nvdm_deviceKey_len);
-    nvdm_write_data_item("common", "host", NVDM_DATA_ITEM_TYPE_STRING, (uint8_t *)host, nvdm_host_len);
+    /* Initialize wifi stack and register wifi init complete event handler,
+     * notes:  the wifi initial process will be implemented and finished while system task scheduler is running.
+     */
+    wifi_init(&config, NULL);
 
-    wifi_connection_register_event_handler(WIFI_EVENT_IOT_INIT_COMPLETE , _wifi_event_handler);
-    wifi_connection_register_event_handler(WIFI_EVENT_IOT_CONNECTED, _wifi_event_handler);
-    wifi_connection_register_event_handler(WIFI_EVENT_IOT_PORT_SECURE, _wifi_event_handler);
-    wifi_connection_register_event_handler(WIFI_EVENT_IOT_DISCONNECTED, _wifi_event_handler);
-
-    wifi_config.opmode = WIFI_MODE_STA_ONLY;
-
-    strcpy((char *)wifi_config.sta_config.ssid, Ssid);
-    wifi_config.sta_config.ssid_length = strlen(Ssid);
-    strcpy((char *)wifi_config.sta_config.password, Password);
-    wifi_config.sta_config.password_length = strlen(Password);
-
-    xTaskCreate(wifi_initial_task, "User app", 1024, NULL, 1, NULL);
-
-    /* Initialize pwm */
+    /* Tcpip stack and net interface initialization,  dhcp client, dhcp server process initialization*/
+    lwip_network_init(config.opmode);
+    lwip_net_start(config.opmode);
+    printf("hello word\n");
     start_pwm();
+    /* Create a user task for demo when and how to use wifi config API  to change WiFI settings,
+       Most WiFi APIs must be called in task scheduler, the system will work wrong if called in main(),
+       For which API must be called in task, please refer to wifi_api.h or WiFi API reference.
+           xTaskCreate(user_wifi_app_entry,
+                UNIFY_USR_DEMO_TASK_NAME,
+                UNIFY_USR_DEMO_TASK_STACKSIZE / 4,
+                NULL, UNIFY_USR_DEMO_TASK_PRIO, NULL);
+    */
+
+    xTaskCreate(app_entry, APP_TASK_NAME, APP_TASK_STACKSIZE/sizeof(portSTACK_TYPE), NULL, APP_TASK_PRIO, NULL);
 
     /* Initialize cli task to enable user input cli command from uart port.*/
+
 #if defined(MTK_MINICLI_ENABLE)
     cli_def_create();
     cli_task_create();
 #endif
-
+    /* Start the scheduler. */
     vTaskStartScheduler();
 
     /* If all is well, the scheduler will now be running, and the following line
@@ -227,3 +226,4 @@ int main(void)
     for more details. */
     for ( ;; );
 }
+

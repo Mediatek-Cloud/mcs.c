@@ -21,13 +21,13 @@
 ;    - XIP_CODE_BASE: 
 ;    - XIP_CODE_SIZE:  512K
 ;******************************************************************************************
-#define XIP_CODE_BASE 0x1007C000
-#define XIP_CODE_SIZE 0x00080000
+#define XIP_CODE_BASE 0x10079000
+#define XIP_CODE_SIZE 0x000BF000
 
 ;******************************************************************************************
 ;SYSRAM definition: 
-;    - XIP_CODE_BASE: 
-;    - XIP_CODE_SIZE:  256K
+;    - SYSRAM_BASE: 
+;    - SYSRAM_SIZE:  256K
 ;******************************************************************************************
 #define SYSRAM_BASE 0x20000000
 #define SYSRAM_SIZE 0x00040000
@@ -58,11 +58,6 @@ ROM XIP_CODE_BASE XIP_CODE_SIZE
   {
      *(.isr_vector, +First)
      .ANY (+RW +ZI)
-  }
-
-  HEAP +0x0
-  {
-     *(HEAP)
   }
   
   STACK (SYSRAM_BASE+SYSRAM_SIZE) STACK_SIZE
