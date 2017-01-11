@@ -2,82 +2,53 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "lwip/netif.h"
+#include "lwip/tcpip.h"
+#include "lwip/sockets.h"
+#include "ethernetif.h"
+#include "lwip/sockets.h"
+#include "netif/etharp.h"
+#include "timers.h"
+#include "os.h"
 #include "httpclient.h"
+#include "hal_sys.h"
+#include "fota.h"
+#include "fota_config.h"
 #include "mcs.h"
 
-/* RESTful config */
+#define SOCK_TCP_SRV_PORT 443
 #define BUF_SIZE   (1024 * 1)
-/* Now only .com , must do for china */
+
 #define HTTPS_MTK_CLOUD_URL_COM "http://api.mediatek.com/mcs/v2/devices/"
 #define HTTPS_MTK_CLOUD_URL_CN "http://api.mediatek.cn/mcs/v2/devices/"
 
-/* utils */
-void mcs_split(char **arr, char *str, const char *del) {
-  char *s = strtok(str, del);
-  while(s != NULL) {
-    *arr++ = s;
-    s = strtok(NULL, del);
-  }
-}
+TimerHandle_t heartbeat_timer;
+char *TCP_ip [20] = {0};
 
-/**
- * @brief Split MCS response into limited splits
- * @details There two difference between mcs_split:
- *          1. This function can avoid burst of MCS data
- *          (for now, two MCS response data concatnates sometimes when sending requests in high frequency)
- *          2. This function is reentrant version of mcs_split
- *          (use strtok_r instead of strtok)
- *
- * @param dst output buffer
- * @param src input buffer
- * @param delimiter
- * @param max_split max number of splits
- */
-void mcs_splitn(char ** dst, char * src, const char * delimiter, uint32_t max_split)
+/* to get TCP IP */
+HTTPCLIENT_RESULT getInitialTCPIP()
 {
-    uint32_t split_cnt = 0;
-    char *saveptr = NULL;
-    char *s = strtok_r(src, delimiter, &saveptr);
-    while (s != NULL && split_cnt < max_split) {
-        *dst++ = s;
-        s = strtok_r(NULL, delimiter, &saveptr);
-        split_cnt++;
-    }
-}
-
-char *mcs_replace(char *st, char *orig, char *repl) {
-  static char buffer[1024];
-  char *ch;
-  if (!(ch = strstr(st, orig)))
-   return st;
-  strncpy(buffer, st, ch-st);
-  buffer[ch-st] = 0;
-  sprintf(buffer+(ch-st), "%s%s", repl, ch+strlen(orig));
-  return buffer;
-}
-
-void mcs_upload_datapoint(char *value)
-{
-    /* upload mcs datapoint */
+    int ret = HTTPCLIENT_ERROR_CONN;
     httpclient_t client = {0};
     char *buf = NULL;
 
-    int ret = HTTPCLIENT_ERROR_CONN;
     httpclient_data_t client_data = {0};
-    char *content_type = "text/csv";
-    // char post_data[32];
 
-    /* Set post_url */
-    char post_url[70] ={0};
+    /* set Url */
+    char get_url[70] ={0};
+
+    printf("deviceId: %s\n", DEVICEID);
+    printf("deviceKey: %s\n", DEVICEKEY);
+    printf("host0: %s\n", HOST);
 
     if (strcmp(HOST, "com") == 0) {
-        strcat(post_url, HTTPS_MTK_CLOUD_URL_COM);
+        strcat(get_url, HTTPS_MTK_CLOUD_URL_COM);
     } else {
-        strcat(post_url, HTTPS_MTK_CLOUD_URL_CN);
+        strcat(get_url, HTTPS_MTK_CLOUD_URL_CN);
     }
 
-    strcat(post_url, DEVICEID);
-    strcat(post_url, "/datapoints.csv");
+    strcat(get_url, DEVICEID);
+    strcat(get_url, "/connections.csv");
 
     /* Set header */
     char header[40] = {0};
@@ -85,37 +56,143 @@ void mcs_upload_datapoint(char *value)
     strcat(header, DEVICEKEY);
     strcat(header, "\r\n");
 
-    printf("header: %s\n", header);
-    printf("url: %s\n", post_url);
-    printf("data: %s\n", value);
-
     buf = pvPortMalloc(BUF_SIZE);
     if (buf == NULL) {
-        printf("buf malloc failed.\r\n");
         return ret;
     }
+
     buf[0] = '\0';
-    ret = httpclient_connect(&client, post_url);
+    ret = httpclient_connect(&client, get_url);
 
     client_data.response_buf = buf;
     client_data.response_buf_len = BUF_SIZE;
-    client_data.post_content_type = content_type;
-    // sprintf(post_data, data);
-    client_data.post_buf = value;
-    client_data.post_buf_len = strlen(value);
     httpclient_set_custom_header(&client, header);
-    ret = httpclient_send_request(&client, post_url, HTTPCLIENT_POST, &client_data);
+
+    ret = httpclient_get(&client, get_url, &client_data);
     if (ret < 0) {
         return ret;
     }
-    ret = httpclient_recv_response(&client, &client_data);
-    if (ret < 0) {
-        return ret;
+
+    printf("content:%s\n", client_data.response_buf);
+
+    if (200 == httpclient_get_response_code(&client)) {
+        char split_buf[MCS_MAX_STRING_SIZE] = {0};
+        strcpy(split_buf, client_data.response_buf);
+
+        char *arr[1];
+        char *del = ",";
+        mcs_split(arr, split_buf, del);
+        strcpy(TCP_ip, arr[0]);
     }
-    printf("\n************************\n");
-    printf("httpclient_test_keepalive post data every 5 sec, http status:%d, response data: %s\r\n", httpclient_get_response_code(&client), client_data.response_buf);
-    printf("\n************************\n");
+
     vPortFree(buf);
     httpclient_close(&client);
     return ret;
+}
+
+int32_t mcs_tcp_init(void (*mcs_tcp_callback)(char *))
+{
+    int s;
+    int c;
+    int ret;
+    struct sockaddr_in addr;
+    int count = 0;
+    int rcv_len, rlen;
+    int32_t mcs_ret = MCS_TCP_DISCONNECT;
+
+    /* Setting the TCP ip */
+    if (HTTPCLIENT_OK != getInitialTCPIP()) {
+        return MCS_TCP_INIT_ERROR;
+    }
+
+    /* command buffer */
+    char cmd_buf [50]= {0};
+    strcat(cmd_buf, DEVICEID);
+    strcat(cmd_buf, ",");
+    strcat(cmd_buf, DEVICEKEY);
+    strcat(cmd_buf, ",0");
+
+mcs_tcp_connect:
+    os_memset(&addr, 0, sizeof(addr));
+    addr.sin_len = sizeof(addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(SOCK_TCP_SRV_PORT);
+    addr.sin_addr.s_addr =inet_addr(TCP_ip);
+
+    /* create the socket */
+    s = lwip_socket(AF_INET, SOCK_STREAM, 0);
+    if (s < 0) {
+        mcs_ret = MCS_TCP_SOCKET_INIT_ERROR;
+        printf("tcp client create fail 0\n");
+        goto idle;
+    }
+
+    ret = lwip_connect(s, (struct sockaddr *)&addr, sizeof(addr));
+
+    if (ret < 0) {
+        lwip_close(s);
+        printf("tcp client connect fail 1\n");
+        goto mcs_tcp_connect;
+    }
+
+    /* timer */
+    void tcpTimerCallback( TimerHandle_t pxTimer ) {
+        ret = lwip_write(s, cmd_buf, sizeof(cmd_buf));
+    }
+
+    heartbeat_timer = xTimerCreate("TimerMain", (30*1000 / portTICK_RATE_MS), pdTRUE, (void *)0, tcpTimerCallback);
+    xTimerStart( heartbeat_timer, 0 );
+
+    for (;;) {
+        char rcv_buf[MCS_MAX_STRING_SIZE] = {0};
+
+        if (0 == count) {
+            ret = lwip_write(s, cmd_buf, sizeof(cmd_buf));
+        }
+
+        LOG_I(common, "MCS tcp-client waiting for data...");
+        rcv_len = 0;
+        rlen = lwip_recv(s, &rcv_buf[rcv_len], sizeof(rcv_buf) - 1 - rcv_len, 0);
+        rcv_len += rlen;
+
+        if ( 0 == rcv_len ) {
+            return MCS_TCP_DISCONNECT;
+        }
+
+        LOG_I(common, "MCS tcp-client received data:%s", rcv_buf);
+
+        /* split the string of rcv_buffer */
+        char split_buf[MCS_MAX_STRING_SIZE] = {0};
+        strcpy(split_buf, rcv_buf);
+
+        char *arr[7];
+        char *del = ",";
+        mcs_splitn(arr, split_buf, del, 7);
+        if (0 == strncmp (arr[3], "FOTA", 4)) {
+            char *s = mcs_replace(arr[6], "https", "http");
+            printf("fota url: %s\n", s);
+            char data_buf [100] = {0};
+            strcat(data_buf, "status");
+            strcat(data_buf, ",,fotaing");
+            mcs_upload_datapoint(data_buf);
+            fota_download_by_http(s);
+
+            fota_ret_t err;
+            err = fota_trigger_update();
+
+            if (0 == err) {
+                hal_sys_reboot(HAL_SYS_REBOOT_MAGIC, WHOLE_SYSTEM_REBOOT_COMMAND);
+                return 0;
+            } else {
+                return -1;
+            }
+        } else {
+          mcs_tcp_callback(rcv_buf);
+        }
+        count ++;
+    }
+
+idle:
+    LOG_I(common, "MCS tcp-client end");
+    return MCS_TCP_DISCONNECT;
 }

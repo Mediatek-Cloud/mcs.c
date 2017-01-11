@@ -2,52 +2,48 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lwip/netif.h"
-#include "lwip/tcpip.h"
-#include "lwip/sockets.h"
-#include "ethernetif.h"
-#include "lwip/sockets.h"
-#include "netif/etharp.h"
-#include "timers.h"
+#include "MQTTClient.h"
+#include "mqtt.h"
 #include "os.h"
-#include "httpclient.h"
 #include "mcs.h"
 
-/* Now only .com , must do for china */
-#define HTTPS_MTK_CLOUD_URL_COM "http://api.mediatek.com/mcs/v2/devices/"
-#define HTTPS_MTK_CLOUD_URL_CN "http://api.mediatek.cn/mcs/v2/devices/"
+#define MQTT_HOST_COM "mqtt.mcs.mediatek.com"
+#define MQTT_HOST_CN "mqtt.mcs.mediatek.cn"
 
 #include "hal_sys.h"
 #include "fota.h"
 #include "fota_config.h"
 
-void mqttMessageArrived(MessageData *md) {
-    char rcv_buf_old[100] = {0};
+#define MIN(a,b) ((a) < (b) ? a : b)
 
+char rcv_buf[150] = {0};
+
+void mqttMessageArrived(MessageData *md)
+{
+    char rcv_buf_old[150] = {0};
     MQTTMessage *message = md->message;
-    char rcv_buf[100] = {0};
-    strcpy(rcv_buf, message->payload);
 
-    char split_buf[MAX_STRING_SIZE] = {0};
+    const size_t write_len = MIN((size_t)(message->payloadlen), 150 - 1);
+    strncpy(rcv_buf, message->payload, write_len);
+    rcv_buf[write_len] = 0;
+    printf("rcv1: %s\n", rcv_buf);
+
+    char split_buf[MCS_MAX_STRING_SIZE] = {0};
     strcpy(split_buf, rcv_buf);
 
-    char *arr[7];
+    char *arr[5];
     char *del = ",";
-    mcs_split(arr, split_buf, del);
+    mcs_splitn(arr, split_buf, del, 5);
 
-    if (0 == strncmp (arr[3], "FOTA", 4)) {
-        char *s = mcs_replace(arr[6], "https", "http");
-        printf("fota url: %s\n", s);
+    if (0 == strncmp (arr[1], "FOTA", 4)) {
+        char *s = mcs_replace(arr[4], "https", "http");
         fota_download_by_http(s);
-        fota_trigger_update();
         fota_ret_t err;
         err = fota_trigger_update();
-        if (0 == err ){
+        if (0 == err){
             hal_sys_reboot(HAL_SYS_REBOOT_MAGIC, WHOLE_SYSTEM_REBOOT_COMMAND);
-            // LOG_I(fota_dl_api, "Reboot device!");
             return 0;
         } else {
-            // LOG_E(fota_dl_api, "Trigger FOTA error!");
             return -1;
         }
     } else {
@@ -61,15 +57,16 @@ void mqttMessageArrived(MessageData *md) {
 
 }
 
-void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
+void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *))
+{
     static int arrivedcount = 0;
     Client c;   //MQTT client
     MQTTMessage message;
     int rc = 0;
 
-    printf("topic: %s\n", topic);
-    printf("clientId: %s\n", clientId);
-    printf("port: %s\n", port);
+    printf("topic: %s\n", TOPIC);
+    printf("clientId: %s\n", CLIENTID);
+    printf("port: %s\n", PORT);
     // printf("qos: %s\n", qos_method);
 
     arrivedcount = 0;
@@ -83,10 +80,10 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
     //init mqtt network structure
     NewNetwork(&n);
 
-    if (strcmp(host, "com") == 0) {
-        rc = ConnectNetwork(&n, MQTT_HOST_COM, port);
+    if (strcmp(HOST, "com") == 0) {
+        rc = ConnectNetwork(&n, MQTT_HOST_COM, PORT);
     } else {
-        rc = ConnectNetwork(&n, MQTT_HOST_CN, port);
+        rc = ConnectNetwork(&n, MQTT_HOST_CN, PORT);
     }
 
     if (rc != 0) {
@@ -100,7 +97,7 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
     //mqtt connect req packet header
     data.willFlag = 0;
     data.MQTTVersion = 3;
-    data.clientID.cstring = clientId;
+    data.clientID.cstring = CLIENTID;
     data.username.cstring = NULL;
     data.password.cstring = NULL;
     data.keepAliveInterval = 10;
@@ -113,10 +110,10 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
         printf("MQTT connect fail,status%d\n", rc);
     }
 
-    printf("Subscribing to %s\n", topic);
+    printf("Subscribing to %s\n", TOPIC);
 
     // if (strcmp(qos_method, "0") == 0) {
-        rc = MQTTSubscribe(&c, topic, QOS0, mqttMessageArrived);
+        rc = MQTTSubscribe(&c, TOPIC, QOS0, mqttMessageArrived);
     // } else if (strcmp(qos_method, "1") == 0) {
     //     rc = MQTTSubscribe(&c, topic, QOS1, mqttMessageArrived);
     // } else if (strcmp(qos_method, "2") == 0) {
@@ -128,5 +125,6 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *)) {
     for(;;) {
         MQTTYield(&c, 1000);
     }
+
     return true;
 }
