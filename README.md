@@ -11,14 +11,15 @@
 * `void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *));`
   - Listen the MQTT from MCS.
 
-* `smart_config_if_enabled()`
-  - Enable smart connection with MCS app.
-
 ## Usage
 
-### 請參考 /reference 下的 iot_sdk_demo project 目錄結構
+### For TCP
+#### Please see `/reference/iot_sdk_demo` :
 * Copy /reference/iot_sdk_demo folder to your SDK: /project/mt7687_hdk/apps/iot_sdk_demo
 
-## Binding MTK RTOS SDK version
+### For MQTT
+#### Please  see `/reference/iot_sdk_demo_mqtt` :
+* Copy /reference/iot_sdk_demo_mqtt folder to your SDK: /project/mt7687_hdk/apps/iot_sdk_demo_mqtt
 
-* [V3.3.1](https://cdn.mediatek.com/download_page/index.html?platform=RTOS&version=v3.3.1&filename=LinkIt_SDK_V3.3.1_public.tar.gz)
+## Binding MTK RTOS SDK version
+* 4.1.0 SDK
