@@ -31,54 +31,24 @@
  * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
  * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
  */
+#ifndef __CLI_CMDS_H__
+#define __CLI_CMDS_H__
 
-#include <string.h>
-#include "network_init.h"
-#include "lwip_network.h"
-#include "syslog.h"
-#include "wifi_api.h"
+#if defined(MTK_MINICLI_ENABLE)
 
+#include "cli.h"
 
-#ifdef __ICCARM__
-#define STRCPY strncpy
-#else
-#define STRCPY strlcpy
+#ifdef __cplusplus
+extern "C" {
 #endif
 
+void cli_cmds_init(cli_t *cli);
 
-wifi_phy_mode_t wifi_change_wireless_mode_5g_to_2g(wifi_phy_mode_t wirelessmode)
-{
-    if (WIFI_PHY_11A == wirelessmode) {
-        return WIFI_PHY_11B;
-    } else if (WIFI_PHY_11ABG_MIXED == wirelessmode) {
-        return WIFI_PHY_11BG_MIXED;
-    } else if (WIFI_PHY_11ABGN_MIXED == wirelessmode) {
-        return WIFI_PHY_11BGN_MIXED;
-    } else if (WIFI_PHY_11AN_MIXED == wirelessmode) {
-        return WIFI_PHY_11N_2_4G;
-    } else if (WIFI_PHY_11AGN_MIXED == wirelessmode) {
-        return WIFI_PHY_11GN_MIXED;
-    } else if (WIFI_PHY_11N_5G == wirelessmode) {
-        return WIFI_PHY_11N_2_4G;
-    } else {
-        return wirelessmode;
-    }
+#ifdef __cplusplus
 }
+#endif
 
-uint8_t wifi_set_opmode(uint8_t target_mode)
-{
-    uint8_t origin_op_mode = 0;
-    wifi_config_get_opmode(&origin_op_mode);
-    if(target_mode == origin_op_mode) {
-        LOG_I(wifi, "same opmode %d, do nothing", target_mode);
-        return 1;
-    }
-    lwip_net_stop(origin_op_mode);
+#endif /* MTK_MINICLI_ENABLE */
 
-    wifi_config_set_opmode(target_mode);
-    LOG_I(wifi, "set opmode to [%d]", target_mode);
-
-    lwip_net_start(target_mode);
-    return 0;
-}
+#endif /* __CLI_CMDS_H__ */
 

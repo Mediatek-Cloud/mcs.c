@@ -31,24 +31,17 @@
  * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
  * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
  */
-#ifndef __CLI_CMDS_H__
-#define __CLI_CMDS_H__
 
-#if defined(MTK_MINICLI_ENABLE)
+/*
+ * Auto generated Run-Time-Environment Component Configuration File
+ *      *** Do not modify ! ***
+ *
+ * Project: 'freertos_template' 
+ * Target:  'Target 1' 
+ */
 
-#include "cli.h"
+#ifndef RTE_COMPONENTS_H
+#define RTE_COMPONENTS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-void cli_cmds_init(cli_t *cli);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* MTK_MINICLI_ENABLE */
-
-#endif /* __CLI_CMDS_H__ */
-
+#endif /* RTE_COMPONENTS_H */

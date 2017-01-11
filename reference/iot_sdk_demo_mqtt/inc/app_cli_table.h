@@ -31,28 +31,39 @@
  * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
  * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
  */
-#include <stdio.h>
 
-/**
-  * @brief  network init function. initial wifi and lwip config
-  * @param None
-  * @retval None
+#ifndef __APP_CLI_TABLE_H__
+#define __APP_CLI_TABLE_H__
+
+#ifdef MTK_MINICLI_ENABLE
+
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+
+
+ /**
+  * WIFI_CLI_ENTRY
   */
-
-void lwip_network_init(uint8_t opmode);
-
-
-void lwip_net_start(uint8_t opmode);
+#include "wifi_cli.h"
 
 
-void lwip_net_stop(uint8_t opmode);
 
 
-/**
-  * @brief  when wifi and ip ready will return.
-  * @param None
-  * @retval None
-  */
-void lwip_net_ready(void);
+#define APP_CLI_CMDS     WIFI_PUB_CLI_ENTRY \
+                         WIFI_PUB_CLI_SMNT_ENTRY \
+                         PING_CLI_ENTRY \
+                         IPERF_CLI_ENTRY
+
+
+#ifdef __cplusplus
+ }
+#endif
+
+#endif /* #if defined(MTK_MINICLI_ENABLE) */
+
+#endif /* __APP_CLI_TABLE_H__ */
 
 

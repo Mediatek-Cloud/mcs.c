@@ -21,5 +21,5 @@ MTK_HEAP_SIZE_GUARD_ENABLE          = n
 MTK_OS_CPU_UTILIZATION_ENABLE       = n
 MTK_WIFI_PROFILE_ENABLE             = n
 MTK_NVDM_ENABLE                     = y
-MCS_TCP                             = y
-MCS_MQTT                            = n
+MCS_TCP                             = n
+MCS_MQTT                            = y

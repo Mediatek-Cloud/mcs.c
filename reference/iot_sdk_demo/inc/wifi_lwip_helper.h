@@ -32,20 +32,43 @@
  * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
  */
 
-#ifndef __APP_COMMON_H__
-#define __APP_COMMON_H__
+#ifndef __WIFI_LWIP_H__
+#define __WIFI_LWIP_H__
+
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void user_wifi_app_entry(void *args);
+/**
+  * @brief  network init function. initial wifi and lwip config
+  * @param None
+  * @retval None
+  */
 
-int32_t user_wifi_init_complete_handler(wifi_event_t event, uint8_t *payload, uint32_t length);
+void lwip_network_init(uint8_t opmode);
+
+
+void lwip_net_start(uint8_t opmode);
+
+
+void lwip_net_stop(uint8_t opmode);
+
+/**
+  * @brief  when wifi and ip ready will return.
+  * @param None
+  * @retval None
+  */
+void lwip_net_ready(void);
+
+/**
+* @note This api is only for internal use
+*/
+uint8_t wifi_set_opmode(uint8_t target_mode);
 
 #ifdef __cplusplus
 }
-#endif 
+#endif
 
-#endif /* __APP_COMMON_H__ */
-
+#endif /* __WIFI_LWIP_H__ */

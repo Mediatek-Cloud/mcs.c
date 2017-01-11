@@ -31,24 +31,22 @@
  * OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY RECEIVER TO
  * MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
  */
-#ifndef __CLI_CMDS_H__
-#define __CLI_CMDS_H__
 
-#if defined(MTK_MINICLI_ENABLE)
+#ifndef __NET_INIT_H__
+#define __NET_INIT_H__
 
-#include "cli.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void cli_cmds_init(cli_t *cli);
+
+void system_init(void);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MTK_MINICLI_ENABLE */
-
-#endif /* __CLI_CMDS_H__ */
+#endif //__NET_INIT_H__
 
