@@ -137,15 +137,15 @@ void start_pwm() {
 
 }
 
-void tcp_callback(char *rcv_buf) {
+void mcs_mqtt_callback(char *rcv_buf) {
 
     char *arr[5];
     char *del = ",";
     mcs_split(arr, rcv_buf, del);
 
-    if (0 == strncmp(arr[3], PWM_CHANNEL, strlen(PWM_CHANNEL))) {
-        printf("value: %d\n", atoi(arr[4]));
-        hal_pwm_set_duty_cycle(pwm_pin, atoi(arr[4]));
+    if (0 == strncmp(arr[1], PWM_CHANNEL, strlen(PWM_CHANNEL))) {
+        printf("value: %d\n", atoi(arr[2]));
+        hal_pwm_set_duty_cycle(pwm_pin, atoi(arr[2]));
     }
 
     printf("rcv_buf: %s\n", rcv_buf);
@@ -154,7 +154,7 @@ void tcp_callback(char *rcv_buf) {
 static void app_entry(void *args)
 {
     lwip_net_ready();
-    mcs_tcp_init(tcp_callback);
+    mcs_mqtt_init(mcs_mqtt_callback);
 
     while (1) {
         vTaskDelay(1000 / portTICK_RATE_MS); // release CPU
@@ -226,3 +226,4 @@ int main(void)
     for more details. */
     for ( ;; );
 }
+

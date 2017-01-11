@@ -86,8 +86,8 @@ HTTPCLIENT_RESULT getInitialTCPIP () {
 
         char *arr[1];
         char *del = ",";
-        mcs_split(arr, split_buf, del);
-        strcpy(TCP_ip, arr[0]);
+        mcs_splitn(arr, split_buf, del, 2);
+        strncpy(TCP_ip, arr[0], 20);
     }
     vPortFree(buf);
     httpclient_close(&client);
