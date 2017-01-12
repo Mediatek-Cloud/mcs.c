@@ -9,16 +9,11 @@
 #define DEVICEKEY "Input your deviceKey"
 #define HOST "com"
 
-/* if you use MQTT
-#define TOPIC "mcs/{Input your deviceId}/{Input your deviceKey}/+"
-#define PORT "1883"
-#define CLIENTID "mt7687"
-*/
-
 typedef void (*mcs_tcp_callback_t)(char *);
 typedef void (*mcs_mqtt_callback_t)(char *);
 
 void mcs_upload_datapoint(char *);
+void mcs_mqtt_upload_datapoint(char* channel, char *value);
 int32_t mcs_tcp_init(void (*mcs_tcp_callback)(char *));
 void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *));
 

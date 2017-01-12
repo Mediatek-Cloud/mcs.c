@@ -16,20 +16,24 @@
 
 #define MIN(a,b) ((a) < (b) ? a : b)
 
-char rcv_buf[150] = {0};
+Client c;
+char *topic_buf [20] = {0};
+char *value_buf [100] = {0};
 
 void mqttMessageArrived(MessageData *md)
 {
-    char rcv_buf_old[150] = {0};
+    char rcv_buf_old[200] = {0};
+    char rcv_buf[200] = {0};
+
     MQTTMessage *message = md->message;
 
-    const size_t write_len = MIN((size_t)(message->payloadlen), 150 - 1);
+    const size_t write_len = MIN((size_t)(message->payloadlen), 200 - 1);
     strncpy(rcv_buf, message->payload, write_len);
     rcv_buf[write_len] = 0;
     printf("rcv1: %s\n", rcv_buf);
 
     char split_buf[MCS_MAX_STRING_SIZE] = {0};
-    strcpy(split_buf, rcv_buf);
+    strncpy(split_buf, rcv_buf, MCS_MAX_STRING_SIZE);
 
     char *arr[5];
     char *del = ",";
@@ -48,33 +52,51 @@ void mqttMessageArrived(MessageData *md)
         }
     } else {
         if (strcmp(rcv_buf_old, rcv_buf) != 0) {
-            rcv_buf[(size_t)(message->payloadlen)] = '\0';
             * rcv_buf_old = "";
-            strcpy(*rcv_buf_old, rcv_buf);
+            strncpy(*rcv_buf_old, rcv_buf, 200);
             mcs_mqtt_callback(rcv_buf);
         }
     }
 
 }
 
+void mcs_mqtt_upload_datapoint(char* channel, char *value)
+{
+    MQTTMessage message1;
+    message1.qos = QOS0;
+    message1.retained = false;
+    message1.dup = false;
+
+    topic_buf[0] = '\0';
+    value_buf[0] = '\0';
+
+    // char topic_buf [20] = {0};
+    strcat(topic_buf, "mcs/");
+    strcat(topic_buf, DEVICEID);
+    strcat(topic_buf, "/");
+    strcat(topic_buf, DEVICEKEY);
+    strcat(topic_buf, "/");
+    strcat(topic_buf, channel);
+
+    strcat(value_buf, ",");
+    strcat(value_buf, channel);
+    strcat(value_buf, ",");
+    strcat(value_buf, value);
+
+    message1.payload = value_buf;
+    message1.payloadlen = strlen(value_buf) + 1;
+
+    return MQTTPublish(&c, topic_buf, &message1);
+}
+
 void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *))
 {
-    static int arrivedcount = 0;
-    Client c;   //MQTT client
-    MQTTMessage message;
+    Network n;  //TCP network
     int rc = 0;
-
-    printf("topic: %s\n", TOPIC);
-    printf("clientId: %s\n", CLIENTID);
-    printf("port: %s\n", PORT);
-    // printf("qos: %s\n", qos_method);
-
-    arrivedcount = 0;
 
     unsigned char msg_buf[100];     //generate messages such as unsubscrube
     unsigned char msg_readbuf[100]; //receive messages such as unsubscrube ack
 
-    Network n;  //TCP network
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 
     //init mqtt network structure
@@ -110,18 +132,15 @@ void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *))
         printf("MQTT connect fail,status%d\n", rc);
     }
 
-    printf("Subscribing to %s\n", TOPIC);
+    char *device_topic_buf [20] = {0};
+    strcat(device_topic_buf, "mcs/");
+    strcat(device_topic_buf, DEVICEID);
+    strcat(device_topic_buf, "/");
+    strcat(device_topic_buf, DEVICEKEY);
+    strcat(device_topic_buf, "/+");
 
-    // if (strcmp(qos_method, "0") == 0) {
-        rc = MQTTSubscribe(&c, TOPIC, QOS0, mqttMessageArrived);
-    // } else if (strcmp(qos_method, "1") == 0) {
-    //     rc = MQTTSubscribe(&c, topic, QOS1, mqttMessageArrived);
-    // } else if (strcmp(qos_method, "2") == 0) {
-    //     rc = MQTTSubscribe(&c, topic, QOS2, mqttMessageArrived);
-    // }
-
-    printf("Client Subscribed %d\n", rc);
-
+    rc = MQTTSubscribe(&c, device_topic_buf, QOS0, mqttMessageArrived);
+    printf("rc(%d):", rc);
     for(;;) {
         MQTTYield(&c, 1000);
     }

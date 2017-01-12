@@ -53,6 +53,10 @@
 /* pwm module */
 #include "hal_pwm.h"
 
+
+#define SSID "mcs"
+#define PASSWORD "mcs12345678"
+
 /* HAL_PWM_CLOCK_40MHZ = 4 */
 #define mode (4)
 #define frequency (400000)
@@ -183,8 +187,8 @@ int main(void)
      */
     wifi_config_t config = {0};
     config.opmode = WIFI_MODE_STA_ONLY;
-    strcpy((char *)config.sta_config.ssid, (const char *)"mcs");
-    strcpy((char *)config.sta_config.password, (const char *)"mcs12345678");
+    strcpy((char *)config.sta_config.ssid, SSID);
+    strcpy((char *)config.sta_config.password, PASSWORD);
     config.sta_config.ssid_length = strlen((const char *)config.sta_config.ssid);
     config.sta_config.password_length = strlen((const char *)config.sta_config.password);
 

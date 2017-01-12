@@ -5,10 +5,9 @@
 #define MCS_TCP_DISCONNECT 0x2
 #define MCS_MAX_STRING_SIZE 200
 
-#define DEVICEID "DU8xrUWV"
-#define DEVICEKEY "nE1EFLIlm3TrZg79"
+#define DEVICEID "Input your deviceId"
+#define DEVICEKEY "Input your deviceKey"
 #define HOST "com"
-#define TOPIC "mcs/DU8xrUWV/nE1EFLIlm3TrZg79/+"
 #define PORT "1883"
 #define CLIENTID "mt7687"
 
@@ -16,6 +15,7 @@ typedef void (*mcs_tcp_callback_t)(char *);
 typedef void (*mcs_mqtt_callback_t)(char *);
 
 void mcs_upload_datapoint(char *);
+void mcs_mqtt_upload_datapoint(char* channel, char *value);
 int32_t mcs_tcp_init(void (*mcs_tcp_callback)(char *));
 void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *));
 

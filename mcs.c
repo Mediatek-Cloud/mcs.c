@@ -59,10 +59,10 @@ char *mcs_replace(char *st, char *orig, char *repl) {
 void mcs_upload_datapoint(char *value)
 {
     /* upload mcs datapoint */
+    int ret = HTTPCLIENT_ERROR_CONN;
     httpclient_t client = {0};
     char *buf = NULL;
 
-    int ret = HTTPCLIENT_ERROR_CONN;
     httpclient_data_t client_data = {0};
     char *content_type = "text/csv";
     // char post_data[32];
@@ -104,17 +104,18 @@ void mcs_upload_datapoint(char *value)
     client_data.post_buf = value;
     client_data.post_buf_len = strlen(value);
     httpclient_set_custom_header(&client, header);
+    // ret = httpclient_post(&client, post_url, &client_data);
     ret = httpclient_send_request(&client, post_url, HTTPCLIENT_POST, &client_data);
     if (ret < 0) {
         return ret;
     }
+    // if (200 != httpclient_get_response_code(&client)) {
+    //     return -1;
+    // }
     ret = httpclient_recv_response(&client, &client_data);
     if (ret < 0) {
         return ret;
     }
-    printf("\n************************\n");
-    printf("httpclient_test_keepalive post data every 5 sec, http status:%d, response data: %s\r\n", httpclient_get_response_code(&client), client_data.response_buf);
-    printf("\n************************\n");
     vPortFree(buf);
     httpclient_close(&client);
     return ret;
