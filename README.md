@@ -10,6 +10,9 @@
 
 * `void mcs_mqtt_init(void (*mcs_mqtt_callback)(char *));`
   - Listen the MQTT from MCS.
+* `void mcs_mqtt_upload_datapoint(char* channel, char *value);`
+  - Upload data points to MCS by MQTT.
+
 
 ## Usage
 
@@ -20,6 +23,10 @@
 ### For MQTT
 #### Please  see `/reference/iot_sdk_demo_mqtt` :
 * Copy /reference/iot_sdk_demo_mqtt folder to your SDK: /project/mt7687_hdk/apps/iot_sdk_demo_mqtt
+
+## More reference projects:
+
+[see here](https://github.com/Mediatek-Cloud/mcs.c-examples)
 
 ## Binding MTK RTOS SDK version
 * 4.1.0 SDK
