@@ -29,4 +29,4 @@
 [see here](https://github.com/Mediatek-Cloud/mcs.c-examples)
 
 ## Binding MTK RTOS SDK version
-* 4.1.0 SDK
+* 4.2.0 SDK
