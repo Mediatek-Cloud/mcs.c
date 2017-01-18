@@ -2151,6 +2151,9 @@
       <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\os_utils.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\wifi_channel.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\driver\board\mt76x7_hdk\wifi\src\wifi_cli.c</name>
     </file>
     <file>
@@ -2436,7 +2439,7 @@
       <name>$PROJ_DIR$\..\..\..\..\..\kernel\rtos\FreeRTOS\Source\portable\IAR\ARM_CM4F\port.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\kernel\rtos\FreeRTOS\Source\portable\IAR\mt7687\port_tickless.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\kernel\rtos\FreeRTOS\Source\portable\IAR\mt7687\port_tick.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\kernel\rtos\FreeRTOS\Source\portable\IAR\ARM_CM4F\portasm.s</name>

@@ -33,11 +33,11 @@
         </option>
         <option>
           <name>MacOverride</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>MacFile</name>
-          <state></state>
+          <state>$PROJ_DIR$\..\..\..\..\..\tools\iar\mt7687\FlashMT7687.mac</state>
         </option>
         <option>
           <name>MemOverride</name>

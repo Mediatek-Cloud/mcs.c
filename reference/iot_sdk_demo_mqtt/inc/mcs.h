@@ -5,8 +5,8 @@
 #define MCS_TCP_DISCONNECT 0x2
 #define MCS_MAX_STRING_SIZE 200
 
-#define DEVICEID "Input your deviceId"
-#define DEVICEKEY "Input your deviceKey"
+#define DEVICEID "DU8xrUWV"
+#define DEVICEKEY "nE1EFLIlm3TrZg79"
 #define HOST "com"
 #define PORT "1883"
 #define CLIENTID "mt7687"

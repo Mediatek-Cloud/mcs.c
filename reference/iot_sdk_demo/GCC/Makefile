@@ -41,7 +41,6 @@
 
 
 SOURCE_DIR  = ../../../../..
-BINPATH     = ~/gcc-arm-none-eabi/bin
 PWD         = $(shell pwd)
 SDK_PATH    = $(abspath $(PWD)/$(SOURCE_DIR))
 DATIME      = $(shell date --iso=seconds)
@@ -149,9 +148,11 @@ include $(SOURCE_DIR)/middleware/third_party/httpclient/module.mk
 # fota
 include $(SOURCE_DIR)/middleware/MTK/fota/module.mk
 
+#tftp
+include $(SOURCE_DIR)/middleware/MTK/tftp/module.mk
+
 APP_FILES       = $(APP_PATH_SRC)/main.c     \
                   $(APP_PATH_SRC)/wifi_lwip_helper.c \
-                  driver/board/mt76x7_hdk/util/src/io_def.c \
                   $(APP_PATH)/GCC/syscalls.c \
                   $(APP_PATH_SRC)/sys_init.c \
                   $(APP_PATH_SRC)/mcs.c \
@@ -168,6 +169,10 @@ CFLAGS += -I$(SOURCE_DIR)/middleware/third_party/mqtt/MQTTClient-C/src
 CFLAGS += -I$(SOURCE_DIR)/middleware/third_party/mqtt/MQTTPacket/src
 
 include $(SOURCE_DIR)/middleware/third_party/mqtt/module.mk
+endif
+
+ifeq ($(MTK_MINICLI_ENABLE),y)
+APP_FILES       += driver/board/mt76x7_hdk/util/src/io_def.c
 endif
 
 APP_FILES       += $(APP_PATH_SRC)/ept_gpio_var.c

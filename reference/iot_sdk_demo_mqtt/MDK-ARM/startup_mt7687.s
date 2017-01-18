@@ -173,12 +173,17 @@ __Vectors_Size  EQU  __Vectors_End - __isr_vector
 
 Reset_Handler   PROC
                 EXPORT  Reset_Handler              [WEAK]
+                IMPORT  CachePreInit
                 IMPORT  SystemInit
                 IMPORT  __main
 
                 LDR     SP, =__initial_sp
 
                 CPSID   I
+
+                ;preinit cache to accelerate region init progress
+                LDR     R0, =CachePreInit
+                BLX     R0
 
                 LDR     R0, =SystemInit
                 BLX     R0

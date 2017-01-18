@@ -49,6 +49,8 @@
 #include "mt7687_cm4_hw_memmap.h"
 #include "exception_mt7687.h"
 #include "top.h"
+#include "flash_map.h"
+#include "hal_cache_hw.h"
 
 /* ----------------------------------------------------------------------------
    -- Core clock
@@ -119,4 +121,47 @@ void SystemInit(void)
                   SCB_SHCSR_USGFAULTENA_Msk |
                   SCB_SHCSR_BUSFAULTENA_Msk;
 }
+
+/**
+  * @brief  CACHE preinit
+  *         Init CACHE to accelerate region init progress.
+  * @param  None
+  * @retval None
+  */
+void CachePreInit(void)
+{
+    /* CACHE disable */
+    CACHE->CACHE_CON = 0x00;
+
+    /* Flush all cache lines */
+    CACHE->CACHE_OP = 0x13;
+
+    /* Invalidate all cache lines */
+    CACHE->CACHE_OP = 0x03;
+
+    /* Set cacheable region */
+    CACHE->CACHE_ENTRY_N[0] = (FLASH_BASE + CM4_CODE_BASE) | 0x100;
+    CACHE->CACHE_END_ENTRY_N[0] = FLASH_BASE + CM4_CODE_BASE + CM4_CODE_LENGTH;
+
+    CACHE->CACHE_REGION_EN = 1;
+
+    switch (TCM_LENGTH) {
+        /* 64K TCM/32K CACHE */
+        case 0x00010000:
+            CACHE->CACHE_CON = 0x30D;
+            break;
+        /* 80K TCM/16K CACHE */
+        case 0x00014000:
+            CACHE->CACHE_CON = 0x20D;
+            break;
+        /* 88K TCM/8K CACHE */
+        case 0x00016000:
+            CACHE->CACHE_CON = 0x10D;
+            break;
+        /* 96K TCM/NO CACHE */
+        default:
+            break;
+    }
+}
+
 

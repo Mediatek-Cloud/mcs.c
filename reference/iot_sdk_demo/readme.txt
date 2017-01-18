@@ -1,6 +1,6 @@
 /* Copyright Statement:
  *
- * (C) 2005-2016  MediaTek Inc. All rights reserved.
+ * (C) 2005-2017 MediaTek Inc. All rights reserved.
  *
  * This software/firmware and related documentation ("MediaTek Software") are
  * protected under relevant copyright laws. The information contained herein
@@ -12,7 +12,7 @@
  * (as applicable) MediaTek Software if you have agreed to and been bound by
  * the applicable license agreement with MediaTek ("License Agreement") and
  * been granted explicit permission to do so within the License Agreement
- * ("Permitted User").  If you are not a Permitted User, please cease any
+ * ("Permitted User"). If you are not a Permitted User, please cease any
  * access or use of MediaTek Software immediately.
  */
 
@@ -63,31 +63,31 @@
 
 @par Directory contents
   - Source and header files
-    - \b src/main.c:            Main program.
-    - \b src/sys_init.c:        Aggregated initialization routines.
-    - \b src/system_mt7687.c:   MT76x7 clock configuration file.
-    - \b src/cli_cmds.c:        CLI table.
-    - \b src/wifi_lwip_helper.c:lwIP configuration.
-    - \b src/cli_def.c:         CLI definition.
-    - \b inc/flash_map.h:       MT76x7 memory layout symbol file.
-    - \b inc/task_def.h:        Define the task stack size, queue length,
-                                project name, and priority for the application
-                                to create tasks.
+    - \b src/main.c:              Main program.
+    - \b src/sys_init.c:          Aggregated initialization routines.
+    - \b src/system_mt7687.c:     MT76x7 clock configuration file.
+    - \b src/cli_cmds.c:          CLI table.
+    - \b src/wifi_lwip_helper.c:  lwIP configuration.
+    - \b src/cli_def.c:           CLI definition.
+    - \b inc/flash_map.h:         MT76x7 memory layout symbol file.
+    - \b inc/task_def.h:          Define the task stack size, queue length,
+                                  project name, and priority for the
+                                  application to create tasks.
     - \b inc/hal_feature_config.h:
-                                MT76x7 feature configuration file.
-    - \b inc/FreeRTOSConfig.h:  MT76x7 FreeRTOS configuration file.
-    - \b inc/lwipopts.h:        lwIP configuration.
-    - \b inc/sys_init.h:        Prototype declaration for
-                                iot_sdk_demo/src/sys_init.c.
-    - \b inc/app_cli_table.h:   CLI table entry.
-    - \b inc/cli_cmds.h:        Prototype declaration for
-                                iot_sdk_demo/src/cli_cmds.c.
-    - \b inc/wifi_lwip_helper.h:Prototype declaration for
-                                iot_sdk_demo/src/wifi_lwip_helper.c.
-    - \b GCC/syscalls.c:        MT76x7 syscalls for GCC.
-    - \b GCC/startup_mt7687.s:  MT76x7 startup file for GCC.
+                                  MT76x7 feature configuration file.
+    - \b inc/FreeRTOSConfig.h:    MT76x7 FreeRTOS configuration file.
+    - \b inc/lwipopts.h:          lwIP configuration.
+    - \b inc/sys_init.h:          Prototype declaration for
+                                  iot_sdk_demo/src/sys_init.c.
+    - \b inc/app_cli_table.h:     CLI table entry.
+    - \b inc/cli_cmds.h:          Prototype declaration for
+                                  iot_sdk_demo/src/cli_cmds.c.
+    - \b inc/wifi_lwip_helper.h:  Prototype declaration for
+                                  iot_sdk_demo/src/wifi_lwip_helper.c.
+    - \b GCC/syscalls.c:          MT76x7 syscalls for GCC.
+    - \b GCC/startup_mt7687.s:    MT76x7 startup file for GCC.
     - \b MDK-ARM/startup_mt7687.s:
-                                MT76x7 startup file for Keil IDE.
+                                  MT76x7 startup file for Keil IDE.
   - Project configuration files using GCC
     - \b GCC/feature.mk:       Feature configuration.
     - \b GCC/Makefile:         Makefile.

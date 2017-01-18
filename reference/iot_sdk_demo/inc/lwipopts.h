@@ -271,20 +271,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_STATS      1
 #define LWIP_STATS_DISPLAY 1
 #endif
-/*
- * Should use the default value defined in tcp_impl.h
- */
-#if 0
-/* -------- TCP Timer Intervals ------- */
-#define TCP_TMR_INTERVAL       1    /* The TCP timer interval in
-                                       milliseconds. */
 
-#define TCP_FAST_INTERVAL      2    /* the fine grained timeout in
-                                       milliseconds */
-
-#define TCP_SLOW_INTERVAL      5    /* the coarse grained timeout in
-                                       milliseconds */
-#endif
 /*
    ------------------------------------
    ---------- AUTOIP options ----------
@@ -342,16 +329,6 @@ a lot of data that needs to be copied, this should be set high. */
  * LWIP_HAVE_LOOPIF==1: Support loop interface (127.0.0.1) and loopif.c
  */
 #define LWIP_HAVE_LOOPIF                1
-
-
-/*
- * Should use the default value defined in opt.h
- */
-#if 0
-/* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
-   timeouts. */
-#define MEMP_NUM_SYS_TIMEOUT    (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + (PPP_SUPPORT*6*MEMP_NUM_PPP_PCB) + (LWIP_IPV6 ? (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD) : 0))
-#endif
 
 
 #if defined(MTK_LWIP_DYNAMIC_DEBUG_ENABLE)

@@ -54,6 +54,7 @@
 #include "flash_map.h"
 #include "io_def.h"
 
+/* Enable NVDM feature */
 #ifdef MTK_NVDM_ENABLE
 #include "nvdm.h"
 #endif
@@ -66,6 +67,7 @@ extern void tickless_init(void);
 * @return      The character as input.
 */
 #ifndef MTK_MINICLI_ENABLE
+/* Predefined MACRO of gcc */
 #ifdef __GNUC__
 int __io_putchar(int ch)
 #else
@@ -158,6 +160,7 @@ static void prvSetupHardware(void)
     bsp_ept_gpio_setting_init();
 
     /* initialize logging port */
+/* Enable MIMICLI feature */
 #ifdef MTK_MINICLI_ENABLE
     io_def_uart_init();
 #else
@@ -214,6 +217,7 @@ void system_init(void)
     /* do infrastructure initialization */
     prvSetupHardware();
 
+/* Enable NVDM feature */
 #ifdef MTK_NVDM_ENABLE
     nvdm_init();
 #endif

@@ -35,47 +35,6 @@
 #ifndef __FLASH_MAP_H__
 #define __FLASH_MAP_H__
 
-#ifdef MTK_FOTA_DUAL_IMAGE_ENABLE
-
-#ifndef FOTA_PARTITION_B_BUILD
-/* flash layout on partition A */
-#define LOADER_LENGTH           0x8000        /*  32KB */
-#define FOTA_CONTROL_LENGTH     0x8000        /*  32KB */
-#define N9_RAMCODE_LENGTH       0x50000       /* 320KB */
-#define CM4_CODE_LENGTH         0xA0000       /* 640KB */
-#define FOTA_LENGTH             0xF0000       /* 960KB */
-#define NVDM_LENGTH             0x10000       /*  64KB */
-
-#define LOADER_BASE             0x0
-#define FOTA_CONTROL_BASE       (LOADER_BASE       + LOADER_LENGTH)
-#define N9_RAMCODE_BASE         (FOTA_CONTROL_BASE + FOTA_CONTROL_LENGTH)
-#define CM4_CODE_BASE           (N9_RAMCODE_BASE   + N9_RAMCODE_LENGTH)
-#define FOTA_BASE               (CM4_CODE_BASE     + CM4_CODE_LENGTH)
-#define NVDM_BASE               (FOTA_BASE         + FOTA_LENGTH)
-
-#define FLASH_BASE            0x10000000
-
-#else /* FOTA_PARTITION_B_BUILD */
-/* flash layout on partition B */
-#define LOADER_LENGTH           0x8000        /*  32KB */
-#define FOTA_CONTROL_LENGTH     0x8000        /*  32KB */
-#define FOTA_LENGTH             0xF0000       /* 960KB */
-#define N9_RAMCODE_LENGTH       0x50000       /* 320KB */
-#define CM4_CODE_LENGTH         0xA0000       /* 640KB */
-#define NVDM_LENGTH             0x10000       /*  64KB */
-
-#define LOADER_BASE             0x0
-#define FOTA_CONTROL_BASE       (LOADER_BASE       + LOADER_LENGTH)
-#define FOTA_BASE               (FOTA_CONTROL_BASE + FOTA_CONTROL_LENGTH)
-#define N9_RAMCODE_BASE         (FOTA_BASE         + FOTA_LENGTH)
-#define CM4_CODE_BASE           (N9_RAMCODE_BASE   + N9_RAMCODE_LENGTH)
-#define NVDM_BASE               (CM4_CODE_BASE     + CM4_CODE_LENGTH)
-
-#define FLASH_BASE            0x10000000
-#endif /* FOTA_PARTITION_B_BUILD */
-
-#else /* origin layout setting */
-
 #define LOADER_LENGTH           0x8000        /*  32KB */
 #define RESERVED_LENGTH         0x8000        /*  32KB */
 #define N9_RAMCODE_LENGTH       0x69000       /* 420KB */
@@ -90,9 +49,10 @@
 #define FOTA_BASE               (CM4_CODE_BASE   + CM4_CODE_LENGTH)
 #define NVDM_BASE               (FOTA_BASE       + FOTA_LENGTH)
 
-#define FLASH_BASE            0x10000000
+#define FLASH_BASE		        0x10000000
 
-#endif
+#define TCM_BASE                0x00100000
+#define TCM_LENGTH              0x00010000  /* 64kB */
 
 #endif // __FLASH_MAP_H__
 

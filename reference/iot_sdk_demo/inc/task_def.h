@@ -83,7 +83,7 @@ typedef enum {
 
 /* for smart connection task */
 #define UNIFY_SMTCN_TASK_NAME              "smtcn"
-#define UNIFY_SMTCN_TASK_STACKSIZE         (512*4) /*unit byte!*/
+#define UNIFY_SMTCN_TASK_STACKSIZE         (1024 *4) /*unit byte!*/
 #define UNIFY_SMTCN_TASK_PRIO              TASK_PRIORITY_NORMAL
 
 /* for lwIP task */
@@ -103,12 +103,14 @@ typedef enum {
 
 /* syslog task definition */
 #define SYSLOG_TASK_NAME "SYSLOG"
+/*This definition determines whether the port service feature is enabled. If it is not defined, then the port service feature is not supported.*/
 #if defined(MTK_PORT_SERVICE_ENABLE)
 #define SYSLOG_TASK_STACKSIZE 1024
 #else
 #define SYSLOG_TASK_STACKSIZE 192
 #endif
 #define SYSLOG_TASK_PRIO TASK_PRIORITY_SYSLOG
+/*MTK_NO_PSRAM_ENABLE: the definition of MTK_NO_PSRAM_ENABLE determines whether the demo uses PSRAM. If it is defined, means no PSRAM in this project.*/
 #if (PRODUCT_VERSION == 7687) || (PRODUCT_VERSION == 7697) || defined(MTK_NO_PSRAM_ENABLE)
 #define SYSLOG_QUEUE_LENGTH 8
 #elif (PRODUCT_VERSION == 2523)
@@ -121,6 +123,7 @@ typedef enum {
 #define DHCPD_TASK_PRIO                 TASK_PRIORITY_NORMAL
 
 /* for os utilization task */
+/*MTK_OS_CPU_UTILIZATION_ENABLE: This definition determines whether enable CPU utilization profiling feature, if enabled, can use AT command on MT25x3 or CLI command on MT76x7 to do CPU utilization profiling.*/
 #if defined(MTK_OS_CPU_UTILIZATION_ENABLE)
 #define MTK_OS_CPU_UTILIZATION_TASK_NAME "CPU"
 #define MTK_OS_CPU_UTILIZATION_STACKSIZE 512
@@ -136,6 +139,7 @@ typedef enum {
 #define UNIFY_USR_DEMO_TASK_PRIO              TASK_PRIORITY_NORMAL
 
 /* for create cli */
+/*This option is to enable and disable CLI (command line interface) engine.*/
 #if defined(MTK_MINICLI_ENABLE)
 #define MINICLI_TASK_NAME               "cli"
 #define MINICLI_TASK_STACKSIZE          (4096)

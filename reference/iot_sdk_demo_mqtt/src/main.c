@@ -48,19 +48,16 @@
 #include "syslog.h"
 #include "os.h"
 #include <nvdm.h>
+
 #include "mcs.h"
+#include "httpclient.h"
+#include "hal_gpio.h"
 
-/* pwm module */
-#include "hal_pwm.h"
+#define SSID "mcs"
+#define PASSWORD "mcs12345678"
 
-/* HAL_PWM_CLOCK_40MHZ = 4 */
-#define mode (4)
-#define frequency (400000)
-
-/* gpio(pin 31) == pwm(pin 32) */
-#define pwm_pin 32
-#define pin 31
-#define PWM_CHANNEL "PWM"
+#define GPIO_ON "switch,1"
+#define GPIO_OFF "switch,0"
 
 #define APP_TASK_NAME                   "user entry"
 #define APP_TASK_STACKSIZE              (6*1024)
@@ -115,39 +112,21 @@ static uint32_t syslog_config_load(syslog_config_t *config)
 }
 #endif
 
-
-void start_pwm() {
-    /* pwm */
-    hal_pinmux_set_function(pin, 9);
-
-    uint32_t total_count = 0;
-
-    if (HAL_PWM_STATUS_OK != hal_pwm_init(HAL_PWM_CLOCK_40MHZ)) {
-      printf("hal_pwm_init fail");
-    }
-    if (HAL_PWM_STATUS_OK != hal_pwm_set_frequency(pwm_pin, frequency, &total_count)) {
-      printf("hal_pwm_set_frequency fail");
-    }
-    if (HAL_PWM_STATUS_OK != hal_pwm_set_duty_cycle(pwm_pin, 0)) {
-      printf("hal_pwm_set_duty_cycle fail");
-    }
-    if (HAL_PWM_STATUS_OK != hal_pwm_start(pwm_pin)) {
-      printf("hal_pwm_start fail");
-    }
-
-}
-
 void mcs_mqtt_callback(char *rcv_buf) {
+    int pin = 35;
 
-    char *arr[5];
-    char *del = ",";
-    mcs_split(arr, rcv_buf, del);
+    hal_pinmux_set_function(pin, 8);
 
-    if (0 == strncmp(arr[1], PWM_CHANNEL, strlen(PWM_CHANNEL))) {
-        printf("value: %d\n", atoi(arr[2]));
-        hal_pwm_set_duty_cycle(pwm_pin, atoi(arr[2]));
+    hal_gpio_status_t ret;
+    ret = hal_gpio_init(pin);
+    ret = hal_gpio_set_direction(pin, HAL_GPIO_DIRECTION_OUTPUT);
+
+    if (NULL != strstr(rcv_buf, GPIO_ON)) {
+        ret = hal_gpio_set_output(pin, 1);
+    } else if (NULL != strstr(rcv_buf, GPIO_OFF)) {
+        ret = hal_gpio_set_output(pin, 0);
     }
-
+    ret = hal_gpio_deinit(pin);
     printf("rcv_buf: %s\n", rcv_buf);
 }
 
@@ -161,7 +140,6 @@ static void app_entry(void *args)
     }
 }
 
-
 /**
   * @brief  Main program
   * @param  None
@@ -171,6 +149,7 @@ int main(void)
 {
     /* Do system initialization, eg: hardware, nvdm, logging and random seed. */
     system_init();
+    bsp_ept_gpio_setting_init();
 
 #ifndef MTK_DEBUG_LEVEL_NONE
     log_init(syslog_config_save, syslog_config_load, syslog_control_blocks);
@@ -183,8 +162,8 @@ int main(void)
      */
     wifi_config_t config = {0};
     config.opmode = WIFI_MODE_STA_ONLY;
-    strcpy((char *)config.sta_config.ssid, (const char *)"mcs");
-    strcpy((char *)config.sta_config.password, (const char *)"mcs12345678");
+    strcpy((char *)config.sta_config.ssid, SSID);
+    strcpy((char *)config.sta_config.password, PASSWORD);
     config.sta_config.ssid_length = strlen((const char *)config.sta_config.ssid);
     config.sta_config.password_length = strlen((const char *)config.sta_config.password);
 
@@ -197,8 +176,14 @@ int main(void)
     /* Tcpip stack and net interface initialization,  dhcp client, dhcp server process initialization*/
     lwip_network_init(config.opmode);
     lwip_net_start(config.opmode);
-    printf("hello word\n");
-    start_pwm();
+
+    xTaskCreate(app_entry,
+        APP_TASK_NAME,
+        APP_TASK_STACKSIZE/sizeof(portSTACK_TYPE),
+        NULL,
+        APP_TASK_PRIO,
+        NULL);
+
     /* Create a user task for demo when and how to use wifi config API  to change WiFI settings,
        Most WiFi APIs must be called in task scheduler, the system will work wrong if called in main(),
        For which API must be called in task, please refer to wifi_api.h or WiFi API reference.
@@ -208,10 +193,7 @@ int main(void)
                 NULL, UNIFY_USR_DEMO_TASK_PRIO, NULL);
     */
 
-    xTaskCreate(app_entry, APP_TASK_NAME, APP_TASK_STACKSIZE/sizeof(portSTACK_TYPE), NULL, APP_TASK_PRIO, NULL);
-
     /* Initialize cli task to enable user input cli command from uart port.*/
-
 #if defined(MTK_MINICLI_ENABLE)
     cli_def_create();
     cli_task_create();

@@ -80,6 +80,7 @@
  *----------------------------------------------------------*/
 
 /* Ensure stdint is only used by the compiler, and not the assembler. */
+/*These definitions are IAR, Keil and GCC compiler option, the sections in this scope will not be compiled by Assembler. This module can not be disabled.*/
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
 #include <stdint.h>
 #include <stdio.h>
@@ -97,6 +98,7 @@ extern uint32_t SystemCoreClock;
 #define configTICK_RATE_HZ              ( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES            ( 20 )
 #define configMINIMAL_STACK_SIZE        ( ( unsigned short ) 256 )
+/*This option is used to build an image dedicated for TGn ASD cerifitication.*/
 #if defined(MTK_WIFI_TGN_VERIFY_ENABLE)
 #define configTOTAL_HEAP_SIZE           ( ( size_t ) ( 100 * 1024 ) ) /* 2 iperf instances need 68KB to run on AP mode */
 #else
@@ -121,6 +123,7 @@ extern uint32_t SystemCoreClock;
 //#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
 
+/*MTK_OS_CPU_UTILIZATION_ENABLE: This definition determines whether enable CPU utilization profiling feature, if enabled, can use AT command on MT25x3 or CLI command on MT76x7 to do CPU utilization profiling.*/
 #if defined(MTK_OS_CPU_UTILIZATION_ENABLE)
 /* Run time stats gathering definitions. */
 void vConfigureTimerForRunTimeStats(void);
@@ -191,20 +194,21 @@ standard names. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
+/* configUSE_TICKLESS_IDLE = 1: enable FreeRTOS's built in tickless idle functionality.
+   configUSE_TICKLESS_IDLE = 2: enable vendor's tickless idle functionality.
+*/
 #if configUSE_TICKLESS_IDLE == 1
 #define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime ) vPortSuppressTicksAndSleep( xExpectedIdleTime )
 #elif configUSE_TICKLESS_IDLE == 2
+/*These definitions are IAR, Keil and GCC compiler option, the sections in this scope will not be compiled by Assembler. This module can not be disabled.*/
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
 extern void tickless_handler( uint32_t xExpectedIdleTime );
 #endif /*#if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)*/
 #define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime ) tickless_handler( xExpectedIdleTime )
 #endif
 
+/*These definitions are IAR, Keil and GCC compiler option, the sections in this scope will not be compiled by Assembler. This module can not be disabled.*/
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
-/* for FreeRTOS trace support */
-#ifdef ENABLE_RTOS_TRACE
-#include "trace.h"
-#endif
 
 #include "assert.h"
 

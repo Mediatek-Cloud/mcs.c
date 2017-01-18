@@ -50,6 +50,13 @@
 #include "dhcpd.h"
 #include "wifi_private_api.h"
 
+/*
+    Description: use DHCP client in Wi-Fi STA mode to get IP address from server.
+    Option:
+        0: disable DHCP client procedure, set static IP address instead
+        1: enable DHCP client to get IP address
+    Dependency: No.
+*/
 #define USE_DHCP                 1
 
 
@@ -103,7 +110,7 @@ static void ip_ready_callback(struct netif *netif)
             netif_set_addr(ap_if, &netif->ip_addr, &netif->netmask, &netif->gw);
         }
     #endif
-      
+
        /*This is a private API , which used to inform IP is ready to wifi driver
         *In present, WiFi Driver will do some operation when this API is invoked, such as:
         *Do WiFi&BLE Coexstence relative behavior if BLE is enabled and do Power Saving Status change.

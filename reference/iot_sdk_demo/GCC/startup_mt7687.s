@@ -201,6 +201,9 @@ Reset_Handler:
 
     cpsid i
 
+    /* preinit cache to accelerate region init progress */
+    bl CachePreInit
+
     ldr    r1, =__etext
     ldr    r2, =__data_start__
     ldr    r3, =__data_end__

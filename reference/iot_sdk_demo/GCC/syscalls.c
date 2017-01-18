@@ -60,36 +60,36 @@ int _write(int file, char *ptr, int len)
     int i;
 
     for (i = 0; i < len; i++) {
-        __io_putchar( *ptr++ );
+        __io_putchar(*ptr++);
     }
 
     return len;
 }
 
-caddr_t _sbrk_r (struct _reent *r, int incr)
+caddr_t _sbrk_r(struct _reent *r, size_t nbytes)
 {
-    extern char   end asm ("end"); /* Defined by the linker.  */
-    static char *heap_end;
-    char         *prev_heap_end;
-    char         *stack_ptr;
+    extern char end;       /* Defined by linker */
+    static char *heap_end; /* Previous end of heap or 0 if none */
+    char        *prev_heap_end;
+    char        *stack;
 
-    __asm volatile ("MRS %0, msp\n" : "=r" (stack_ptr) );
+    __asm volatile("MRS %0, msp\n" : "=r"(stack));
 
-    if (heap_end == NULL) {
-        heap_end = & end;
+    if (0 == heap_end) {
+        heap_end = &end; /* Initialize first time round */
     }
 
     prev_heap_end = heap_end;
 
-    if (heap_end + incr > stack_ptr) {
-        /* Some of the libstdc++-v3 tests rely upon detecting
-        out of memory errors, so do not abort here.  */
-
+    if (stack < (prev_heap_end + nbytes)) {
+     /* heap would overlap the current stack depth.
+        * Future:  use sbrk() system call to make simulator grow memory beyond
+        * the stack and allocate that
+        */
         //errno = ENOMEM;
-        return (caddr_t) - 1;
+        return (char *) - 1;
     }
-
-    heap_end += incr;
+    heap_end += nbytes;
 
     return (caddr_t) prev_heap_end;
 }
@@ -122,11 +122,11 @@ pid_t _getpid(void)
 int _gettimeofday(struct timeval *tv, void *ptz)
 {
     int ticks = xTaskGetTickCount();
-    if(tv!=NULL) {
-        tv->tv_sec = (ticks/1000);
-        tv->tv_usec = (ticks%1000)*1000;
+    if (tv != NULL) {
+        tv->tv_sec = (ticks / 1000);
+        tv->tv_usec = (ticks % 1000) * 1000;
         return 0;
-    }   
+    }
 
-    return -1; 
+    return -1;
 }

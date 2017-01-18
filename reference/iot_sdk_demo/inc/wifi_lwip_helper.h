@@ -55,6 +55,7 @@ void lwip_net_start(uint8_t opmode);
 
 void lwip_net_stop(uint8_t opmode);
 
+
 /**
   * @brief  when wifi and ip ready will return.
   * @param None

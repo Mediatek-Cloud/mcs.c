@@ -13,7 +13,7 @@ MTK_WIFI_WPS_ENABLE                 = y
 MTK_WIFI_DIRECT_ENABLE              = n
 MTK_WIFI_REPEATER_ENABLE            = y
 # debug level: none, error, warning, and info
-MTK_DEBUG_LEVEL                     = info
+MTK_DEBUG_LEVEL                     = none
 
 # System service debug feature for internal use
 MTK_SUPPORT_HEAP_DEBUG              = n

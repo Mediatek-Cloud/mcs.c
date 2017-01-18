@@ -36,18 +36,22 @@
 
         SECTION CSTACK:DATA:NOROOT(3)
 
-        SECTION .isr_vector:DATA:ROOT(2)
+        SECTION .intvec:CODE:ROOT(2)
 
         EXTERN  __iar_program_start
+        EXTERN  CachePreInit
+	EXTERN  __iar_init_core
+        EXTERN  __iar_init_vfp
+        EXTERN  __cmain
         EXTERN  SystemInit
-        ;PUBLIC  __vector_table
+        PUBLIC  __vector_table
         PUBLIC  __isr_vector
 
 __iar_init$$done:               ; The vector table is not needed
                                 ; until after copy initialization is done
 
         DATA
-;__vector_table
+__vector_table
 __isr_vector
 
         DCD     SFE(CSTACK)                ; Top of Stack
@@ -174,11 +178,37 @@ Reset_Handler
 
         CPSID   I
 
+        ;preinit cache to accelerate region init progress
+        LDR     R0, =CachePreInit
+        BLX     R0
+
         LDR     R0, =SystemInit
         BLX     R0
 
+ ; copy exeption table
+        LDR      r1, =SFB(.intvec)                  ; Load ROM start address
+        LDR      r0, =0x20000000                    ; Load RAM start address
+        LDR      r2, =0x200003FF                    ; Load RAM end address      
+        BL       data_copy                          ; copy data 	
+        
         LDR     R0, =__iar_program_start
         BX      R0
+  
+; ----- Data-copy Routine -----
+;| r0- RAM base (dst.) addr.  |
+;| r1- ROM base (src.) addr.  |
+;| r2- RAM end (dest.) addr.  |
+; -----------------------------
+data_copy
+    STMFD    SP!,{r1-r4,lr}               ; save return address to stack
+    B        copy_1_cmp                   ; jump to compare
+copy_1
+    LDR      r3,[r1],#4                   ; load temp with data, increment address
+    STR      r3,[r0],#4                   ; store data, increment address
+copy_1_cmp
+    CMP      r0, r2                       ; check end address
+    BLT      copy_1                       ; ... copy more
+    LDMFD    SP!,{r1-r4,pc}               ; return		
 
 		
         PUBWEAK SvcCall_Main
